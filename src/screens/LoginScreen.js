@@ -52,7 +52,7 @@ const LoginScreen = ({ navigation }) => {
           </LinearGradient>
 
           <View style={styles.formContainer}>
-            <Text style={styles.welcome}>Welcome Back</Text>
+            <Text style={styles.welcome}>Welcome</Text>
             <Text style={styles.label}>Email</Text>
             <TextInput
               style={styles.input}
