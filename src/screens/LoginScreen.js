@@ -21,6 +21,7 @@ const LoginScreen = ({ navigation }) => {
     }
     // TODO: Implement actual login logic
     console.log('Login attempt:', { email, password });
+    navigation.navigate('Home');
   };
 
   return (
