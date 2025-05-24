@@ -8,8 +8,7 @@ import HomeScreen from './src/screens/HomeScreen';
 import IncidentDetails from './src/screens/IncidentDetails';
 import ReportIncident from './src/screens/ReportIncident';
 import splashScreen from './src/screens/splashScreen';
-
-
+import { AuthProvider } from './src/AuthContext';
 
 const Stack = createNativeStackNavigator();
 
@@ -44,7 +43,7 @@ export default function App() {
   }
 
   return (
-    <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
+    <AuthProvider>
       <NavigationContainer>
         <Stack.Navigator
           initialRouteName="splashScreen"
@@ -60,6 +59,6 @@ export default function App() {
           <Stack.Screen name="ReportIncident" component={ReportIncident} />
         </Stack.Navigator>
       </NavigationContainer>
-    </View>
+    </AuthProvider>
   );
 }

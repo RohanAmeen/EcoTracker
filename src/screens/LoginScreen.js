@@ -14,19 +14,22 @@ import {
   ScrollView,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useAuth } from '../AuthContext';
 
 const { height, width } = Dimensions.get('window');
 
 const LoginScreen = ({ navigation }) => {
+  const { setIsLoggedIn } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!email || !password) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
     }
-    navigation.navigate('Home');
+    setIsLoggedIn(true);
+    navigation.replace('Home');
   };
 
   return (
