@@ -1,12 +1,12 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { View } from 'react-native';
 import LoginScreen from './src/screens/LoginScreen';
 import SignupScreen from './src/screens/SignupScreen';
 import HomeScreen from './src/screens/HomeScreen';
 import IncidentDetails from './src/screens/IncidentDetails';
 import ReportIncident from './src/screens/ReportIncident';
+import * as SplashScreen from 'expo-splash-screen';
 import splashScreen from './src/screens/splashScreen';
 import { AuthProvider } from './src/AuthContext';
 
@@ -18,12 +18,11 @@ export default function App() {
   useEffect(() => {
     async function prepare() {
       try {
-        // Simulate loading or do your async tasks here
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        await SplashScreen.preventAutoHideAsync();
+
       } catch (e) {
         console.warn(e);
       } finally {
-        // Tell the application to render
         setAppIsReady(true);
       }
     }
@@ -31,10 +30,9 @@ export default function App() {
     prepare();
   }, []);
 
-  const onLayoutRootView = useCallback(async () => {
+  useEffect(() => {
     if (appIsReady) {
-      // This tells the splash screen to hide immediately
-      await SplashScreen.hideAsync();
+      SplashScreen.hideAsync();
     }
   }, [appIsReady]);
 

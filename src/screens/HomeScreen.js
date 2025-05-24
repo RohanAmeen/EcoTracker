@@ -20,6 +20,7 @@ import { useAuth } from '../AuthContext';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Image } from 'react-native';
 import { SafeAreaView as RNSafeAreaViewContext } from 'react-native-safe-area-context';
+import BottomNav from '../components/BottomNav';
 
 const HomeScreen = ({ navigation }) => {
   const { isLoggedIn } = useAuth();
@@ -65,6 +66,61 @@ const HomeScreen = ({ navigation }) => {
       type: 'trash',
       severity: 'high',
       status: 'new',
+      date: '2023-10-27',
+      reportedBy: 'Anonymous',
+      images: [
+        'https://via.placeholder.com/300/b7c9a8/000000?text=Dumping+Photo+1',
+        'https://via.placeholder.com/300/8ca982/ffffff?text=Dumping+Photo+2',
+      ],
+      locationDetails: 'Near Oak Street and Pine Avenue',
+      updates: [
+        { id: 1, text: 'Report received and under review.', date: '2023-10-27', status: 'new' },
+        { id: 2, text: 'Cleanup scheduled for next week.', date: '2023-10-30', status: 'in-progress' },
+      ],
+    },
+    {
+      id: 2,
+      coordinate: {
+        latitude: 37.79525,
+        longitude: -122.4434,
+      },
+      title: 'Air Pollution',
+      description: 'Strong odor from nearby factory',
+      type: 'air',
+      severity: 'medium',
+      status: 'in-progress',
+      date: '2023-10-26',
+      reportedBy: 'Alice',
+      images: [
+        'https://via.placeholder.com/300/8ca982/ffffff?text=Air+Photo+1',
+      ],
+      locationDetails: 'Industrial Zone A',
+      updates: [
+        { id: 1, text: 'Investigation started.', date: '2023-10-26', status: 'in-progress' },
+      ],
+    },
+     {
+      id: 3,
+      coordinate: {
+        latitude: 37.77525,
+        longitude: -122.4184,
+      },
+      title: 'Water Contamination',
+      description: 'Unusual color in the river',
+      type: 'water',
+      severity: 'high',
+      status: 'new',
+      date: '2023-10-25',
+      reportedBy: 'Bob',
+      images: [
+        'https://via.placeholder.com/300/b7c9a8/000000?text=Water+Photo+1',
+        'https://via.placeholder.com/300/8ca982/ffffff?text=Water+Photo+2',
+         'https://via.placeholder.com/300/b7c9a8/000000?text=Water+Photo+3',
+      ],
+      locationDetails: 'Downtown Riverwalk',
+      updates: [
+        { id: 1, text: 'Sample collected for testing.', date: '2023-10-25', status: 'new' },
+      ],
     },
   ];
 
@@ -73,6 +129,20 @@ const HomeScreen = ({ navigation }) => {
     { id: '1', title: 'Illegal Dumping', time: '2h ago', type: 'trash' },
     { id: '2', title: 'Air Pollution', time: '5h ago', type: 'air' },
     { id: '3', title: 'Water Contamination', time: '1d ago', type: 'water' },
+  ];
+
+  // Add dummy leaderboard data
+  const leaderboardData = [
+    { id: '1', name: 'Alice', points: 1200 },
+    { id: '2', name: 'Bob', points: 1100 },
+    { id: '3', name: 'Charlie', points: 1050 },
+    { id: '4', name: 'Diana', points: 950 },
+    { id: '5', name: 'Ethan', points: 900 },
+    { id: '6', name: 'Fiona', points: 850 },
+    { id: '7', name: 'George', points: 800 },
+    { id: '8', name: 'Hannah', points: 780 },
+    { id: '9', name: 'Ivan', points: 760 },
+    { id: '10', name: 'Julia', points: 750 },
   ];
 
   const handleMarkerPress = (marker) => {
@@ -95,7 +165,7 @@ const HomeScreen = ({ navigation }) => {
     <RNSafeAreaViewContext style={styles.safeArea} edges={["top", "left", "right", "bottom"]}>
       {/* Header */}
       <LinearGradient
-        colors={["#b7c9a8", "#8ca982"]}
+        colors={["#2A7B9B", "#57C785", "#2A7B9B"]}
         style={styles.gradientHeader}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
@@ -121,100 +191,96 @@ const HomeScreen = ({ navigation }) => {
           </View>
         </View>
       </LinearGradient>
-
-      {/* Search Bar */}
-      <View style={styles.searchContainer}>
-        <Icon name="search" size={22} color="#888" style={{ marginLeft: 10 }} />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search location..."
-          value={search}
-          onChangeText={setSearch}
-        />
-        <TouchableOpacity>
-          <Icon name="my-location" size={22} color="#888" style={{ marginRight: 10 }} />
-        </TouchableOpacity>
-      </View>
-
-      {/* Map */}
-      <View style={styles.mapContainer}>
-        <MapView
-          provider={PROVIDER_GOOGLE}
-          style={styles.map}
-          region={region}
-          onRegionChangeComplete={setRegion}
-        >
-          {markers.map((marker) => (
-            <Marker
-              key={marker.id}
-              coordinate={marker.coordinate}
-              title={marker.title}
-              description={marker.description}
-              onPress={() => handleMarkerPress(marker)}
-            />
-          ))}
-        </MapView>
-        <Text style={styles.mapLabel}>[Interactive Map]</Text>
-      </View>
-
-      {/* Dashboard Buttons */}
-      <View style={styles.dashboardButtons}>
-        <TouchableOpacity style={styles.reportButton} onPress={handleQuickReport}>
-          <Icon name="add" size={24} color="#2d3a22" />
-          <Text style={styles.reportButtonText}>Report Environmental Incident</Text>
-          <Icon name="chevron-right" size={22} color="#2d3a22" />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.emergencyButton}>
-          <Icon name="error" size={24} color="#fff" />
-          <Text style={styles.emergencyButtonText}>Emergency Report</Text>
-          <Icon name="chevron-right" size={22} color="#fff" />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.viewReportsButton}>
-          <Icon name="list" size={24} color="#2d3a22" />
-          <Text style={styles.viewReportsButtonText}>View My Reports</Text>
-          <Icon name="chevron-right" size={22} color="#2d3a22" />
-        </TouchableOpacity>
-      </View>
-
-      {/* Recent Incidents */}
-      <View style={styles.recentIncidentsContainer}>
-        <Text style={styles.recentIncidentsTitle}>Recent Incidents</Text>
-        <FlatList
-          data={recentIncidents}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <View style={styles.incidentItem}>
-              <Icon name="delete" size={20} color="#4caf50" style={{ marginRight: 8 }} />
-              <Text style={styles.incidentTitle}>{item.title}</Text>
-              <Text style={styles.incidentTime}>{item.time}</Text>
+      <ScrollView contentContainerStyle={styles.scrollViewContent} showsVerticalScrollIndicator={false}>
+        {/* Search Bar */}
+        <View style={styles.searchContainer}>
+          <Icon name="search" size={22} color="#888" style={{ marginLeft: 10 }} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search location..."
+            value={search}
+            onChangeText={setSearch}
+            placeholderTextColor="#888"
+          />
+          <TouchableOpacity style={styles.searchIconRight}>
+            <Icon name="my-location" size={22} color="#888" />
+          </TouchableOpacity>
+        </View>
+        {/* Map */}
+        <View style={styles.mapContainer}>
+          <MapView
+            provider={PROVIDER_GOOGLE}
+            style={styles.map}
+            region={region}
+            onRegionChangeComplete={setRegion}
+          >
+            {markers.map((marker) => (
+              <Marker
+                key={marker.id}
+                coordinate={marker.coordinate}
+                title={marker.title}
+                description={marker.description}
+                onPress={() => handleMarkerPress(marker)}
+              />
+            ))}
+          </MapView>
+          <Text style={styles.mapLabel}>[Interactive Map]</Text>
+        </View>
+        {/* Dashboard Buttons */}
+        <View style={styles.dashboardButtonsContainer}>
+          <TouchableOpacity style={styles.reportButton} onPress={handleQuickReport}>
+            <Icon name="add" size={24} color="#2d3a22" style={styles.buttonLeadingIcon} />
+            <Text style={styles.reportButtonText}>Report Environmental Incident</Text>
+            <Icon name="chevron-right" size={24} color="#2d3a22" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.emergencyButton}>
+            <Icon name="error-outline" size={24} color="#fff" style={styles.buttonLeadingIcon} />
+            <Text style={styles.emergencyButtonText}>Emergency Report</Text>
+            <Icon name="chevron-right" size={24} color="#fff" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.viewReportsButton}>
+            <Icon name="list-alt" size={24} color="#2d3a22" style={styles.buttonLeadingIcon} />
+            <Text style={styles.viewReportsButtonText}>View My Reports</Text>
+            <Icon name="chevron-right" size={24} color="#2d3a22" />
+          </TouchableOpacity>
+        </View>
+        {/* Recent Incidents */}
+        <View style={styles.recentIncidentsSection}>
+          <Text style={styles.sectionTitle}>Recent Incidents</Text>
+          <FlatList
+            data={recentIncidents}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+              <View style={styles.incidentItem}>
+                <Icon name="delete" size={20} color="#8ca982" style={{ marginRight: 8 }} />
+                <Text style={styles.incidentTitle}>{item.title}</Text>
+                <Text style={styles.incidentTime}>{item.time}</Text>
+              </View>
+            )}
+            ItemSeparatorComponent={() => <View style={styles.incidentSeparator} />}
+          />
+        </View>
+        {/* Leaderboard */}
+        <View style={styles.leaderboardSection}>
+          <Text style={styles.sectionTitle}>Leaderboard</Text>
+          {leaderboardData.map((user, idx) => (
+            <View
+              key={user.id}
+              style={[
+                styles.leaderboardItem,
+                idx === 0 && styles.goldRank,
+                idx === 1 && styles.silverRank,
+                idx === 2 && styles.bronzeRank,
+              ]}
+            >
+              <Text style={styles.leaderboardRankText}>{idx + 1}</Text>
+              <Text style={styles.leaderboardName}>{user.name}</Text>
+              <Text style={styles.leaderboardPoints}>{user.points} pts</Text>
             </View>
-          )}
-        />
-      </View>
-
-      {/* Bottom Navigation */}
-      <View style={styles.bottomNav}>
-        <TouchableOpacity style={styles.navItem}>
-          <Icon name="home" size={24} color="#4caf50" />
-          <Text style={styles.navText}>Home</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
-          <Icon name="map" size={24} color="#4caf50" />
-          <Text style={styles.navText}>Map</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
-          <Icon name="add-circle" size={24} color="#4caf50" />
-          <Text style={styles.navText}>Report</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
-          <Icon name="notifications" size={24} color="#4caf50" />
-          <Text style={styles.navText}>Alerts</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem} onPress={handleProfile}>
-          <Icon name="person" size={24} color="#4caf50" />
-          <Text style={styles.navText}>Profile</Text>
-        </TouchableOpacity>
-      </View>
+          ))}
+        </View>
+      </ScrollView>
+      <BottomNav navigation={navigation} currentScreen="Home" />
     </RNSafeAreaViewContext>
   );
 };
@@ -222,10 +288,15 @@ const HomeScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#f6f5ef',
+    backgroundColor: '#f0ede3',
+  },
+  scrollViewContent: {
+    paddingBottom: 90,
+    paddingTop: 0,
   },
   gradientHeader: {
-    padding: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
   },
   headerContent: {
     flexDirection: 'row',
@@ -233,11 +304,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   logo: {
-    width: 40,
-    height: 40,
+    width: 30,
+    height: 30,
+    marginRight: 8,
+    opacity: 0.8,
   },
   logoText: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#fff',
     letterSpacing: 1,
@@ -255,70 +328,81 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
   menuButton: {
-    padding: 6,
+    padding: 4,
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#fff',
-    margin: 16,
-    borderRadius: 20,
-    elevation: 2,
+    marginHorizontal: 16,
+    marginVertical: 12,
+    borderRadius: 24,
+    paddingVertical: 8,
+    paddingHorizontal: 4,
     shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
   },
   searchInput: {
     flex: 1,
-    height: 40,
     paddingHorizontal: 10,
     fontSize: 16,
     color: '#333',
-    backgroundColor: 'transparent',
+  },
+  searchIconRight: {
+    padding: 6,
   },
   mapContainer: {
     marginHorizontal: 16,
-    borderRadius: 16,
+    marginBottom: 16,
+    borderRadius: 12,
     overflow: 'hidden',
-    height: 140,
+    height: 180,
     backgroundColor: '#e0e0e0',
-    marginBottom: 8,
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   map: {
     ...StyleSheet.absoluteFillObject,
-    borderRadius: 16,
   },
   mapLabel: {
     position: 'absolute',
     alignSelf: 'center',
-    top: '40%',
+    top: '45%',
     color: '#6b6b6b',
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
-    opacity: 0.5,
+    opacity: 0.6,
   },
-  dashboardButtons: {
+  dashboardButtonsContainer: {
     marginHorizontal: 16,
-    marginTop: 4,
-    marginBottom: 8,
+    marginBottom: 16,
   },
   reportButton: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#fff',
     borderRadius: 12,
-    padding: 12,
+    padding: 14,
     marginBottom: 8,
-    elevation: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
   reportButtonText: {
     flex: 1,
-    marginLeft: 8,
+    marginLeft: 10,
     color: '#2d3a22',
-    fontWeight: 'bold',
+    fontWeight: '600',
     fontSize: 16,
   },
   emergencyButton: {
@@ -326,14 +410,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#4a5c39',
     borderRadius: 12,
-    padding: 12,
+    padding: 14,
     marginBottom: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
   emergencyButtonText: {
     flex: 1,
-    marginLeft: 8,
+    marginLeft: 10,
     color: '#fff',
-    fontWeight: 'bold',
+    fontWeight: '600',
     fontSize: 16,
   },
   viewReportsButton: {
@@ -341,35 +430,58 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#fff',
     borderRadius: 12,
-    padding: 12,
+    padding: 14,
     marginBottom: 8,
-    elevation: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
   viewReportsButtonText: {
     flex: 1,
-    marginLeft: 8,
+    marginLeft: 10,
     color: '#2d3a22',
-    fontWeight: 'bold',
+    fontWeight: '600',
     fontSize: 16,
   },
-  recentIncidentsContainer: {
+  buttonLeadingIcon: {
+    marginRight: 6,
+  },
+  recentIncidentsSection: {
     backgroundColor: '#fff',
     marginHorizontal: 16,
-    borderRadius: 16,
-    padding: 12,
-    marginBottom: 70,
-    elevation: 1,
+    marginBottom: 16,
+    borderRadius: 12,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  recentIncidentsTitle: {
+  leaderboardSection: {
+    backgroundColor: '#fff',
+    marginHorizontal: 16,
+    marginBottom: 16,
+    borderRadius: 12,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  sectionTitle: {
     fontWeight: 'bold',
-    fontSize: 17,
-    marginBottom: 8,
+    fontSize: 18,
     color: '#2d3a22',
+    marginBottom: 12,
   },
   incidentItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 6,
+    paddingVertical: 10,
   },
   incidentTitle: {
     flex: 1,
@@ -379,30 +491,46 @@ const styles = StyleSheet.create({
   incidentTime: {
     color: '#888',
     fontSize: 13,
+  },
+  incidentSeparator: {
+    height: 1,
+    backgroundColor: '#f0f0f0',
+    marginVertical: 4,
+  },
+  leaderboardItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    borderRadius: 8,
+    marginBottom: 4,
+  },
+  leaderboardRankText: {
+    width: 30,
+    fontWeight: 'bold',
+    fontSize: 16,
+    color: '#2d3a22',
+    textAlign: 'center',
+  },
+  leaderboardName: {
+    flex: 1,
+    fontSize: 15,
+    color: '#333',
     marginLeft: 8,
   },
-  bottomNav: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    flexDirection: 'row',
-    backgroundColor: '#fff',
-    borderTopLeftRadius: 18,
-    borderTopRightRadius: 18,
-    elevation: 10,
-    paddingVertical: 6,
-    justifyContent: 'space-around',
-    alignItems: 'center',
+  leaderboardPoints: {
+    fontWeight: 'bold',
+    fontSize: 15,
+    color: '#4a5c39',
   },
-  navItem: {
-    alignItems: 'center',
-    flex: 1,
+  goldRank: {
+    backgroundColor: '#fff9e6',
   },
-  navText: {
-    fontSize: 12,
-    color: '#4caf50',
-    marginTop: 2,
+  silverRank: {
+    backgroundColor: '#f2f2f2',
+  },
+  bronzeRank: {
+    backgroundColor: '#f4ebe3',
   },
 });
 
