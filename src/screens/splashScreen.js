@@ -3,7 +3,7 @@ import { View, Text, Image, StyleSheet, Dimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Animatable from 'react-native-animatable';
 
-const Dashboard = ({ navigation }) => {
+const SplashScreen = ({ navigation }) => {
   useEffect(() => {
     const timer = setTimeout(() => {
       navigation.replace('Login'); // Change to your login screen name
@@ -25,7 +25,7 @@ const Dashboard = ({ navigation }) => {
         style={styles.content}
       >
         <Image
-          source={require('../../assets/2-removebg-preview.png')}
+          source={require('../../assets/logo.png')}
           style={styles.logo}
           resizeMode="contain"
         />
@@ -72,4 +72,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Dashboard; 
+export default SplashScreen; 
