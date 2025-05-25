@@ -183,6 +183,82 @@ const incidentsAPI = {
       throw error;
     }
   },
+
+  getAllIncidents: async () => {
+    try {
+      const token = await getToken();
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const response = await fetch(`${API_URL}/incidents/admin/all`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Server returned ${response.status}: ${errorText}`);
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Get all incidents error:', error);
+      throw error;
+    }
+  },
+
+  updateIncidentStatus: async (incidentId, status) => {
+    try {
+      const token = await getToken();
+      if (!token) throw new Error('No authentication token found');
+      const response = await fetch(`${API_URL}/incidents/${incidentId}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status }),
+      });
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Server returned ${response.status}: ${errorText}`);
+      }
+      return await response.json();
+    } catch (error) {
+      console.error('Update incident status error:', error);
+      throw error;
+    }
+  },
+
+  deleteIncident: async (incidentId) => {
+    try {
+      const token = await getToken();
+      if (!token) throw new Error('No authentication token found');
+      const response = await fetch(`${API_URL}/incidents/${incidentId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+      });
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Server returned ${response.status}: ${errorText}`);
+      }
+      return await response.json();
+    } catch (error) {
+      console.error('Delete incident error:', error);
+      throw error;
+    }
+  },
 };
 
 const usersAPI = {

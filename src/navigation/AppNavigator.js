@@ -13,12 +13,14 @@ import Profile from '../screens/Profile';
 import ChangePassword from '../screens/ChangePassword';
 import IncidentDetails from '../screens/IncidentDetails';
 import ReportsScreen from '../screens/ReportsScreen';
+import AdminDashboard from '../screens/AdminDashboard';
+import ReportDetailsScreen from '../screens/ReportDetailsScreen';
 
 const Stack = createStackNavigator();
 
 // Stack for authenticated screens
 const AuthenticatedStack = () => {
-  const { isLoggedIn, user } = useAuth();
+  const { isLoggedIn, user, isAdmin } = useAuth();
   const navigation = useNavigation();
 
   useEffect(() => {
@@ -30,11 +32,28 @@ const AuthenticatedStack = () => {
           routes: [{ name: 'Login' }],
         })
       );
+    } else if (isAdmin) {
+      // If user is admin, redirect to admin dashboard
+      navigation.dispatch(
+        CommonActions.reset({
+          index: 0,
+          routes: [{ name: 'AdminDashboard' }],
+        })
+      );
     }
-  }, [isLoggedIn, user, navigation]);
+  }, [isLoggedIn, user, isAdmin, navigation]);
 
   if (!isLoggedIn || !user) {
     return null; // Don't render anything if not logged in or user data is missing
+  }
+
+  if (isAdmin) {
+    return (
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="AdminDashboard" component={AdminDashboard} />
+        <Stack.Screen name="ReportDetails" component={ReportDetailsScreen} />
+      </Stack.Navigator>
+    );
   }
 
   return (
@@ -51,20 +70,20 @@ const AuthenticatedStack = () => {
 
 // Stack for unauthenticated screens
 const UnauthenticatedStack = () => {
-  const { isLoggedIn, user } = useAuth();
+  const { isLoggedIn, user, isAdmin } = useAuth();
   const navigation = useNavigation();
 
   useEffect(() => {
     if (isLoggedIn && user) {
-      // If user is logged in and has user data, redirect to home
+      // If user is logged in and has user data, redirect based on admin status
       navigation.dispatch(
         CommonActions.reset({
           index: 0,
-          routes: [{ name: 'Home' }],
+          routes: [{ name: isAdmin ? 'AdminDashboard' : 'Home' }],
         })
       );
     }
-  }, [isLoggedIn, user, navigation]);
+  }, [isLoggedIn, user, isAdmin, navigation]);
 
   if (isLoggedIn && user) {
     return null; // Don't render anything if logged in and has user data

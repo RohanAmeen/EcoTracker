@@ -20,7 +20,7 @@ import { authAPI } from '../services/api';
 const { height, width } = Dimensions.get('window');
 
 const LoginScreen = ({ navigation }) => {
-  const { setIsLoggedIn, setUser } = useAuth();
+  const { setIsLoggedIn, setUser, setIsAdmin } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -45,10 +45,15 @@ const LoginScreen = ({ navigation }) => {
         return;
       }
 
-      // Only set logged in state if we have both token and user data
+      // Check if user is admin
+      const isAdminUser = email.endsWith('@admin.com');
+      setIsAdmin(isAdminUser);
+
+      // Set user data and login state
       setUser(response.user);
       setIsLoggedIn(true);
-      navigation.replace('Home');
+
+      // Navigation will be handled by the AppNavigator based on isAdmin state
     } catch (error) {
       Alert.alert('Error', 'Failed to login. Please try again.');
       console.error('Login error:', error);

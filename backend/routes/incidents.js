@@ -122,4 +122,72 @@ router.get('/:id', auth, async (req, res) => {
   }
 });
 
+// Get all incidents (admin only)
+router.get('/admin/all', auth, async (req, res) => {
+  try {
+    // Check if user is admin
+    if (!req.user.email.endsWith('@admin.com')) {
+      return res.status(403).json({ error: 'Access denied. Admin only.' });
+    }
+
+    const incidents = await Incident.find()
+      .sort({ createdAt: -1 })
+      .populate('reportedBy', 'username email _id')
+      .lean();
+    
+    console.log('Admin fetched incidents:', incidents.length);
+    console.log('Sample incident reporter:', incidents[0]?.reportedBy);
+    
+    res.json(incidents);
+  } catch (error) {
+    console.error('Error in GET /incidents/admin/all:', error);
+    res.status(500).json({ 
+      error: 'Failed to fetch all incidents',
+      details: error.message 
+    });
+  }
+});
+
+// Update incident status (admin only)
+router.patch('/:id/status', auth, async (req, res) => {
+  try {
+    if (!req.user.email.endsWith('@admin.com')) {
+      return res.status(403).json({ error: 'Access denied. Admin only.' });
+    }
+    const { status } = req.body;
+    if (!['new', 'in-progress', 'resolved', 'rejected'].includes(status)) {
+      return res.status(400).json({ error: 'Invalid status value' });
+    }
+    const incident = await Incident.findByIdAndUpdate(
+      req.params.id,
+      { status },
+      { new: true }
+    );
+    if (!incident) {
+      return res.status(404).json({ error: 'Incident not found' });
+    }
+    res.json(incident);
+  } catch (error) {
+    console.error('Error updating incident status:', error);
+    res.status(500).json({ error: 'Failed to update incident status' });
+  }
+});
+
+// Delete incident (admin only)
+router.delete('/:id', auth, async (req, res) => {
+  try {
+    if (!req.user.email.endsWith('@admin.com')) {
+      return res.status(403).json({ error: 'Access denied. Admin only.' });
+    }
+    const incident = await Incident.findByIdAndDelete(req.params.id);
+    if (!incident) {
+      return res.status(404).json({ error: 'Incident not found' });
+    }
+    res.json({ message: 'Incident deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting incident:', error);
+    res.status(500).json({ error: 'Failed to delete incident' });
+  }
+});
+
 module.exports = router; 

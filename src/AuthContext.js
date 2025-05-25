@@ -10,6 +10,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [navigation, setNavigation] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     checkAuthStatus();
@@ -24,10 +25,14 @@ export const AuthProvider = ({ children }) => {
         const parsedUser = JSON.parse(userData);
         setUser(parsedUser);
         setIsLoggedIn(true);
+        // Check if user is admin
+        const isAdminUser = parsedUser.email.endsWith('@admin.com');
+        setIsAdmin(isAdminUser);
       } else {
         // If no token or user data, ensure we're logged out
         setIsLoggedIn(false);
         setUser(null);
+        setIsAdmin(false);
         await AsyncStorage.removeItem('token');
         await AsyncStorage.removeItem('user');
       }
@@ -36,6 +41,7 @@ export const AuthProvider = ({ children }) => {
       // On error, ensure we're logged out
       setIsLoggedIn(false);
       setUser(null);
+      setIsAdmin(false);
     } finally {
       setLoading(false);
     }
@@ -50,6 +56,7 @@ export const AuthProvider = ({ children }) => {
       // Reset auth state
       setIsLoggedIn(false);
       setUser(null);
+      setIsAdmin(false);
       
       // Reset navigation state and redirect to login
       if (navigation) {
@@ -65,6 +72,7 @@ export const AuthProvider = ({ children }) => {
       // Even if there's an error, ensure we're logged out
       setIsLoggedIn(false);
       setUser(null);
+      setIsAdmin(false);
       if (navigation) {
         navigation.dispatch(
           CommonActions.reset({
@@ -85,7 +93,9 @@ export const AuthProvider = ({ children }) => {
         setUser,
         signOut, 
         setNavigation,
-        loading 
+        loading,
+        isAdmin,
+        setIsAdmin
       }}
     >
       {children}

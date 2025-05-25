@@ -170,6 +170,8 @@ const ReportsScreen = ({ navigation }) => {
         return '#4caf50';
       case 'completed':
         return '#2196f3';
+      case 'rejected':
+        return '#ff4444';
       default:
         return '#b7c9a8';
     }
