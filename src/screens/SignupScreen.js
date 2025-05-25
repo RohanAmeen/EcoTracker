@@ -11,20 +11,23 @@ import {
   Image,
   Dimensions,
   ScrollView,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import BottomNav from '../components/BottomNav';
+import { authAPI } from '../services/api';
 
 const { height, width } = Dimensions.get('window');
 
 const SignupScreen = ({ navigation }) => {
-  const [name, setName] = useState('');
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSignup = () => {
-    if (!name || !email || !password || !confirmPassword) {
+  const handleSignup = async () => {
+    if (!username || !email || !password || !confirmPassword) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
     }
@@ -32,8 +35,32 @@ const SignupScreen = ({ navigation }) => {
       Alert.alert('Error', 'Passwords do not match');
       return;
     }
-    // TODO: Implement actual signup logic
-    console.log('Signup attempt:', { name, email, password });
+
+    try {
+      setLoading(true);
+      const response = await authAPI.register(username, email, password);
+      
+      if (response.error) {
+        Alert.alert('Error', response.error);
+        return;
+      }
+
+      Alert.alert(
+        'Success',
+        'Account created successfully! Please login.',
+        [
+          {
+            text: 'OK',
+            onPress: () => navigation.navigate('Login'),
+          },
+        ]
+      );
+    } catch (error) {
+      Alert.alert('Error', 'Failed to create account. Please try again.');
+      console.error('Signup error:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -55,14 +82,15 @@ const SignupScreen = ({ navigation }) => {
 
           <View style={styles.formContainer}>
             <Text style={styles.welcome}>Create Account</Text>
-            <Text style={styles.label}>Full Name</Text>
+            <Text style={styles.label}>Username</Text>
             <TextInput
               style={styles.input}
-              placeholder="Enter your full name"
-              value={name}
-              onChangeText={setName}
-              autoCapitalize="words"
+              placeholder="Enter your username"
+              value={username}
+              onChangeText={setUsername}
+              autoCapitalize="none"
               placeholderTextColor="#b0b0b0"
+              editable={!loading}
             />
             <Text style={styles.label}>Email</Text>
             <TextInput
@@ -73,6 +101,7 @@ const SignupScreen = ({ navigation }) => {
               keyboardType="email-address"
               autoCapitalize="none"
               placeholderTextColor="#b0b0b0"
+              editable={!loading}
             />
             <Text style={styles.label}>Password</Text>
             <TextInput
@@ -82,6 +111,7 @@ const SignupScreen = ({ navigation }) => {
               onChangeText={setPassword}
               secureTextEntry
               placeholderTextColor="#b0b0b0"
+              editable={!loading}
             />
             <Text style={styles.label}>Confirm Password</Text>
             <TextInput
@@ -91,9 +121,18 @@ const SignupScreen = ({ navigation }) => {
               onChangeText={setConfirmPassword}
               secureTextEntry
               placeholderTextColor="#b0b0b0"
+              editable={!loading}
             />
-            <TouchableOpacity style={styles.signupButton} onPress={handleSignup}>
-              <Text style={styles.signupButtonText}>Sign Up</Text>
+            <TouchableOpacity 
+              style={[styles.signupButton, loading && styles.disabledButton]} 
+              onPress={handleSignup}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.signupButtonText}>Sign Up</Text>
+              )}
             </TouchableOpacity>
             <View style={styles.dividerRow}>
               <View style={styles.divider} />
@@ -103,6 +142,7 @@ const SignupScreen = ({ navigation }) => {
             <TouchableOpacity
               style={styles.loginButton}
               onPress={() => navigation.navigate('Login')}
+              disabled={loading}
             >
               <Text style={styles.loginButtonText}>Login</Text>
             </TouchableOpacity>
@@ -238,6 +278,9 @@ const styles = StyleSheet.create({
     fontSize: 15,
     textDecorationLine: 'underline',
     fontWeight: '500',
+  },
+  disabledButton: {
+    opacity: 0.7,
   },
 });
 

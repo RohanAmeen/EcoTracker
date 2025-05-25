@@ -11,10 +11,12 @@ import {
   Image,
   Dimensions,
   ScrollView,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../AuthContext';
 import BottomNav from '../components/BottomNav';
+import { authAPI } from '../services/api';
 
 const { height, width } = Dimensions.get('window');
 
@@ -22,14 +24,31 @@ const LoginScreen = ({ navigation }) => {
   const { setIsLoggedIn } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
     if (!email || !password) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
     }
-    setIsLoggedIn(true);
-    navigation.replace('Home');
+
+    try {
+      setLoading(true);
+      const response = await authAPI.login(email, password);
+      
+      if (response.error) {
+        Alert.alert('Error', response.error);
+        return;
+      }
+
+      setIsLoggedIn(true);
+      navigation.replace('Home');
+    } catch (error) {
+      Alert.alert('Error', 'Failed to login. Please try again.');
+      console.error('Login error:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -60,6 +79,7 @@ const LoginScreen = ({ navigation }) => {
               keyboardType="email-address"
               autoCapitalize="none"
               placeholderTextColor="#b0b0b0"
+              editable={!loading}
             />
             <Text style={styles.label}>Password</Text>
             <TextInput
@@ -69,9 +89,18 @@ const LoginScreen = ({ navigation }) => {
               onChangeText={setPassword}
               secureTextEntry
               placeholderTextColor="#b0b0b0"
+              editable={!loading}
             />
-            <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-              <Text style={styles.loginButtonText}>Login</Text>
+            <TouchableOpacity 
+              style={[styles.loginButton, loading && styles.disabledButton]} 
+              onPress={handleLogin}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.loginButtonText}>Login</Text>
+              )}
             </TouchableOpacity>
             <View style={styles.dividerRow}>
               <View style={styles.divider} />
@@ -81,6 +110,7 @@ const LoginScreen = ({ navigation }) => {
             <TouchableOpacity
               style={styles.signupButton}
               onPress={() => navigation.navigate('Signup')}
+              disabled={loading}
             >
               <Text style={styles.signupButtonText}>Sign Up</Text>
             </TouchableOpacity>
@@ -217,6 +247,9 @@ const styles = StyleSheet.create({
     fontSize: 15,
     textDecorationLine: 'underline',
     fontWeight: '500',
+  },
+  disabledButton: {
+    opacity: 0.7,
   },
 });
 
