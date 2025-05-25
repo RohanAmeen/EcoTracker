@@ -23,7 +23,7 @@ import { SafeAreaView as RNSafeAreaViewContext } from 'react-native-safe-area-co
 import BottomNav from '../components/BottomNav';
 
 const HomeScreen = ({ navigation }) => {
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, signOut, setNavigation } = useAuth();
   const [region, setRegion] = useState({
     latitude: 30.3753,  // Center of Pakistan
     longitude: 69.3451, // Center of Pakistan
@@ -33,8 +33,11 @@ const HomeScreen = ({ navigation }) => {
   const [search, setSearch] = useState('');
   const [isReportPressed, setIsReportPressed] = useState(false);
   const [isViewReportsPressed, setIsViewReportsPressed] = useState(false);
+  const [isMenuVisible, setIsMenuVisible] = useState(false);
+  const [isMenuClosing, setIsMenuClosing] = useState(false);
 
   useEffect(() => {
+    setNavigation(navigation);
     (async () => {
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
@@ -252,36 +255,122 @@ const HomeScreen = ({ navigation }) => {
     navigation.navigate('Profile');
   };
 
+  const handleMenuPress = () => {
+    setIsMenuVisible(true);
+    setIsMenuClosing(false);
+  };
+
+  const handleMenuClose = () => {
+    setIsMenuClosing(true);
+    setTimeout(() => {
+      setIsMenuVisible(false);
+      setIsMenuClosing(false);
+    }, 200);
+  };
+
+  const handleSignOut = () => {
+    handleMenuClose();
+    signOut();
+  };
+
   return (
     <RNSafeAreaViewContext style={styles.safeArea} edges={["top", "left", "right", "bottom"]}>
-      {/* Header */}
-      <LinearGradient
-        colors={["#2A7B9B", "#57C785", "#2A7B9B"]}
-        style={styles.gradientHeader}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-      >
-        <View style={styles.headerContent}>
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+      <View style={styles.headerContent}>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <View style={styles.logoContainer}>
             <Image
               source={require('../../assets/logo.png')}
               style={styles.logo}
               resizeMode="contain"
             />
-            <Text style={styles.logoText}>EcoTracker</Text>
           </View>
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            {!isLoggedIn && (
-              <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-                <Text style={styles.loginButtonText}>Login</Text>
+          <Text style={styles.logoText}>EcoTracker</Text>
+        </View>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <TouchableOpacity 
+            style={[styles.menuButton, isMenuVisible && styles.menuButtonActive]} 
+            onPress={handleMenuPress}
+          >
+            <Icon name="menu" size={28} color="#4a5c39" />
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <Modal
+        visible={isMenuVisible}
+        transparent={true}
+        animationType="none"
+        onRequestClose={handleMenuClose}
+      >
+        <TouchableOpacity 
+          style={[styles.modalOverlay, isMenuClosing && styles.modalOverlayClosing]} 
+          activeOpacity={1} 
+          onPress={handleMenuClose}
+        >
+          <View style={[styles.slideMenu, isMenuClosing && styles.slideMenuClosing]}>
+            <View style={styles.slideMenuHeader}>
+              <Text style={styles.slideMenuTitle}>Menu</Text>
+              <TouchableOpacity onPress={handleMenuClose}>
+                <Icon name="close" size={24} color="#4a5c39" />
+              </TouchableOpacity>
+            </View>
+            <View style={styles.slideMenuDivider} />
+            {!isLoggedIn ? (
+              <TouchableOpacity 
+                style={styles.slideMenuItem} 
+                onPress={() => {
+                  handleMenuClose();
+                  handleLogin();
+                }}
+              >
+                <View style={styles.slideMenuItemContent}>
+                  <Icon name="login" size={24} color="#4a5c39" />
+                  <Text style={styles.slideMenuItemText}>Login</Text>
+                </View>
+                <Icon name="chevron-right" size={20} color="#4a5c39" />
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity 
+                style={styles.slideMenuItem} 
+                onPress={() => {
+                  handleMenuClose();
+                  handleProfile();
+                }}
+              >
+                <View style={styles.slideMenuItemContent}>
+                  <Icon name="person" size={24} color="#4a5c39" />
+                  <Text style={styles.slideMenuItemText}>Profile</Text>
+                </View>
+                <Icon name="chevron-right" size={20} color="#4a5c39" />
               </TouchableOpacity>
             )}
-            <TouchableOpacity style={styles.menuButton}>
-              <Icon name="menu" size={28} color="#fff" />
+            <TouchableOpacity 
+              style={styles.slideMenuItem} 
+              onPress={() => {
+                handleMenuClose();
+                navigation.navigate('Settings');
+              }}
+            >
+              <View style={styles.slideMenuItemContent}>
+                <Icon name="settings" size={24} color="#4a5c39" />
+                <Text style={styles.slideMenuItemText}>Settings</Text>
+              </View>
+              <Icon name="chevron-right" size={20} color="#4a5c39" />
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={[styles.slideMenuItem, { borderBottomWidth: 0 }]} 
+              onPress={handleSignOut}
+            >
+              <View style={styles.slideMenuItemContent}>
+                <Icon name="logout" size={24} color="#4a5c39" />
+                <Text style={styles.slideMenuItemText}>Sign Out</Text>
+              </View>
+              <Icon name="chevron-right" size={20} color="#4a5c39" />
             </TouchableOpacity>
           </View>
-        </View>
-      </LinearGradient>
+        </TouchableOpacity>
+      </Modal>
+
       <ScrollView contentContainerStyle={styles.scrollViewContent} showsVerticalScrollIndicator={false}>
         {/* Search Bar */}
         <View style={styles.searchContainer}>
@@ -392,7 +481,10 @@ const HomeScreen = ({ navigation }) => {
         </View>
         {/* Leaderboard */}
         <View style={styles.leaderboardSection}>
-          <Text style={styles.sectionTitle}>Leaderboard</Text>
+          <View style={styles.sectionTitleContainer}>
+            <Icon name="emoji-events" size={24} color="#b39b7a" style={styles.sectionIcon} />
+            <Text style={styles.sectionTitle}>Leaderboard</Text>
+          </View>
           <ScrollView 
             style={styles.leaderboardScrollView}
             showsVerticalScrollIndicator={false}
@@ -429,41 +521,39 @@ const styles = StyleSheet.create({
     paddingBottom: 90,
     paddingTop: 0,
   },
-  gradientHeader: {
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-  },
   headerContent: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e4da',
+  },
+  logoContainer: {
+    backgroundColor: '#4a5c39',
+    borderRadius: 16,
+    padding: 4,
+    marginRight: 8,
   },
   logo: {
-    width: 30,
-    height: 30,
-    marginRight: 8,
-    opacity: 0.8,
+    width: 32,
+    height: 32,
+    opacity: 1,
+    tintColor: '#fff',
   },
   logoText: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#fff',
+    fontSize: 26,
+    fontWeight: '800',
+    color: '#4a5c39',
     letterSpacing: 1,
   },
-  loginButton: {
-    marginRight: 10,
-    paddingVertical: 4,
-    paddingHorizontal: 12,
-    backgroundColor: '#fff',
-    borderRadius: 16,
-  },
-  loginButtonText: {
-    color: '#8ca17a',
-    fontWeight: 'bold',
-    fontSize: 15,
-  },
   menuButton: {
-    padding: 4,
+    padding: 8,
+    borderRadius: 8,
+  },
+  menuButtonActive: {
+    backgroundColor: '#f0ede3',
   },
   searchContainer: {
     flexDirection: 'row',
@@ -615,11 +705,18 @@ const styles = StyleSheet.create({
   leaderboardScrollView: {
     maxHeight: 215,
   },
+  sectionTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  sectionIcon: {
+    marginRight: 8,
+  },
   sectionTitle: {
     fontWeight: 'bold',
     fontSize: 18,
     color: '#2d3a22',
-    marginBottom: 12,
   },
   incidentItem: {
     flexDirection: 'row',
@@ -667,13 +764,79 @@ const styles = StyleSheet.create({
     color: '#4a5c39',
   },
   goldRank: {
-    backgroundColor: '#fff9e6',
+    backgroundColor: '#e6d9b8',
   },
   silverRank: {
-    backgroundColor: '#f2f2f2',
+    backgroundColor: '#e0e0e0',
   },
   bronzeRank: {
-    backgroundColor: '#f4ebe3',
+    backgroundColor: '#e6d0c0',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    opacity: 1,
+  },
+  modalOverlayClosing: {
+    opacity: 0,
+  },
+  slideMenu: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#f0ede3',
+    shadowColor: '#000',
+    shadowOffset: { width: -2, height: 0 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 5,
+    opacity: 1,
+  },
+  slideMenuClosing: {
+    opacity: 0,
+  },
+  slideMenuVisible: {
+    transform: [{ translateX: 0 }],
+  },
+  slideMenuHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingTop: 16,
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+    marginTop: Platform.OS === 'ios' ? 50 : 40,
+  },
+  slideMenuTitle: {
+    fontSize: 24,
+    fontWeight: '600',
+    color: '#4a5c39',
+  },
+  slideMenuDivider: {
+    height: 1,
+    backgroundColor: '#e0e4da',
+    marginHorizontal: 20,
+  },
+  slideMenuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e4da',
+  },
+  slideMenuItemContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  slideMenuItemText: {
+    fontSize: 16,
+    color: '#4a5c39',
+    marginLeft: 16,
+    fontWeight: '500',
   },
 });
 

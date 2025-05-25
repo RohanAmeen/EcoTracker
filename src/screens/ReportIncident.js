@@ -106,22 +106,23 @@ const ReportIncident = ({ navigation }) => {
 
   return (
     <RNSafeAreaViewContext style={styles.safeArea} edges={["top", "left", "right", "bottom"]}>
-      <LinearGradient
-        colors={["#2A7B9B", "#57C785", "#2A7B9B"]}
-        style={styles.gradientHeader}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-      >
-        <View style={styles.headerContent}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
-          >
-            <Icon name="arrow-back" size={24} color="#fff" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Report Incident</Text>
+      <View style={styles.headerContent}>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <View style={styles.logoContainer}>
+            <Image
+              source={require('../../assets/logo.png')}
+              style={styles.logo}
+              resizeMode="contain"
+            />
+          </View>
+          <Text style={styles.logoText}>EcoTracker</Text>
         </View>
-      </LinearGradient>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <TouchableOpacity style={styles.menuButton}>
+            <Icon name="menu" size={28} color="#4a5c39" />
+          </TouchableOpacity>
+        </View>
+      </View>
 
       <ScrollView style={styles.scrollViewContent} showsVerticalScrollIndicator={false}>
         <View style={styles.formContainer}>
@@ -137,25 +138,27 @@ const ReportIncident = ({ navigation }) => {
                   ]}
                   onPress={() => handleTypeSelect(option)}
                 >
-                  <Icon 
-                    name={
-                      option === 'trash' ? 'delete' :
-                      option === 'air' ? 'air' :
-                      option === 'water' ? 'water-drop' :
-                      option === 'noise' ? 'volume-up' :
-                      'more-horiz'
-                    } 
-                    size={20} 
-                    color={type === option ? '#fff' : '#4a5c39'} 
-                  />
-                  <Text
-                    style={[
-                      styles.typeButtonText,
-                      type === option && styles.typeButtonTextSelected,
-                    ]}
-                  >
-                    {option.charAt(0).toUpperCase() + option.slice(1)}
-                  </Text>
+                  <View style={styles.typeButtonContent}>
+                    <Icon 
+                      name={
+                        option === 'trash' ? 'delete' :
+                        option === 'air' ? 'air' :
+                        option === 'water' ? 'water-drop' :
+                        option === 'noise' ? 'volume-up' :
+                        'more-horiz'
+                      } 
+                      size={20} 
+                      color={type === option ? '#fff' : '#4a5c39'} 
+                    />
+                    <Text
+                      style={[
+                        styles.typeButtonText,
+                        type === option && styles.typeButtonTextSelected,
+                      ]}
+                    >
+                      {option.charAt(0).toUpperCase() + option.slice(1)}
+                    </Text>
+                  </View>
                 </TouchableOpacity>
               ))}
             </View>
@@ -182,7 +185,6 @@ const ReportIncident = ({ navigation }) => {
                   style={[
                     styles.severityButton,
                     severity === option && styles.severityButtonSelected,
-                    severity === option && { backgroundColor: getSeverityColor(option) }
                   ]}
                   onPress={() => setSeverity(option)}
                 >
@@ -265,7 +267,7 @@ const ReportIncident = ({ navigation }) => {
           <View style={styles.photosSection}>
             <Text style={styles.sectionTitle}>Add Photos</Text>
             <View style={styles.imagePreviewContainer}>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <View style={styles.imagePreviewRow}>
                 {images.map((uri, index) => (
                   <View key={index} style={styles.imagePreviewWrapper}>
                     <Image source={{ uri }} style={styles.imagePreview} />
@@ -278,7 +280,7 @@ const ReportIncident = ({ navigation }) => {
                   <Icon name="add-a-photo" size={24} color="#4a5c39" />
                   <Text style={styles.addImageButtonText}>Add Photo</Text>
                 </TouchableOpacity>
-              </ScrollView>
+              </View>
             </View>
           </View>
 
@@ -292,39 +294,40 @@ const ReportIncident = ({ navigation }) => {
   );
 };
 
-const getSeverityColor = (severity) => {
-  switch (severity) {
-    case 'low':
-      return '#8ca982';
-    case 'medium':
-      return '#6b7a5e';
-    case 'high':
-      return '#4a5c39';
-    default:
-      return '#8ca982';
-  }
-};
-
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#f6f8f3',
-  },
-  gradientHeader: {
-    paddingVertical: 12,
-    paddingHorizontal: 16,
+    backgroundColor: '#f0ede3',
   },
   headerContent: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e4da',
   },
-  backButton: {
-    marginRight: 16,
+  logoContainer: {
+    backgroundColor: '#4a5c39',
+    borderRadius: 16,
+    padding: 4,
+    marginRight: 8,
   },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#fff',
+  logo: {
+    width: 32,
+    height: 32,
+    opacity: 1,
+    tintColor: '#fff',
+  },
+  logoText: {
+    fontSize: 26,
+    fontWeight: '800',
+    color: '#4a5c39',
+    letterSpacing: 1,
+  },
+  menuButton: {
+    padding: 4,
   },
   scrollViewContent: {
     flex: 1,
@@ -346,15 +349,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
+    marginBottom:-70
   },
   typeButton: {
     flex: 1,
     minWidth: '30%',
     backgroundColor: '#fff',
     borderRadius: 8,
-    padding: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
+    padding: 25,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
@@ -367,11 +369,16 @@ const styles = StyleSheet.create({
     backgroundColor: '#4a5c39',
     borderColor: '#4a5c39',
   },
+  typeButtonContent: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   typeButtonText: {
-    marginTop: 6,
+    marginTop: 8,
     fontSize: 13,
     color: '#4a5c39',
     fontWeight: '500',
+    textAlign: 'center',
   },
   typeButtonTextSelected: {
     color: '#fff',
@@ -450,6 +457,11 @@ const styles = StyleSheet.create({
   },
   imagePreviewContainer: {
     marginTop: 8,
+  },
+  imagePreviewRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
   },
   imagePreviewWrapper: {
     marginRight: 12,
