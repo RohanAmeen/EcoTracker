@@ -21,6 +21,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Image } from 'react-native';
 import { SafeAreaView as RNSafeAreaViewContext } from 'react-native-safe-area-context';
 import BottomNav from '../components/BottomNav';
+import { CommonActions } from '@react-navigation/native';
 
 const HomeScreen = ({ navigation }) => {
   const { isLoggedIn, signOut, setNavigation } = useAuth();
@@ -57,6 +58,22 @@ const HomeScreen = ({ navigation }) => {
       });
     })();
   }, []);
+
+  useEffect(() => {
+    if (!isLoggedIn) {
+      // If user is not logged in, redirect to login
+      navigation.dispatch(
+        CommonActions.reset({
+          index: 0,
+          routes: [{ name: 'Login' }],
+        })
+      );
+    }
+  }, [isLoggedIn]);
+
+  if (!isLoggedIn) {
+    return null; // Don't render anything if not logged in
+  }
 
   // Dummy data for markers
   const markers = [

@@ -21,11 +21,21 @@ export const AuthProvider = ({ children }) => {
       const userData = await AsyncStorage.getItem('user');
       
       if (token && userData) {
+        const parsedUser = JSON.parse(userData);
+        setUser(parsedUser);
         setIsLoggedIn(true);
-        setUser(JSON.parse(userData));
+      } else {
+        // If no token or user data, ensure we're logged out
+        setIsLoggedIn(false);
+        setUser(null);
+        await AsyncStorage.removeItem('token');
+        await AsyncStorage.removeItem('user');
       }
     } catch (error) {
       console.error('Error checking auth status:', error);
+      // On error, ensure we're logged out
+      setIsLoggedIn(false);
+      setUser(null);
     } finally {
       setLoading(false);
     }
@@ -33,9 +43,14 @@ export const AuthProvider = ({ children }) => {
 
   const signOut = async () => {
     try {
+      // Clear auth data from storage
       await authAPI.logout();
+      
+      // Reset auth state
       setIsLoggedIn(false);
       setUser(null);
+      
+      // Reset navigation state and redirect to login
       if (navigation) {
         navigation.dispatch(
           CommonActions.reset({
@@ -46,6 +61,17 @@ export const AuthProvider = ({ children }) => {
       }
     } catch (error) {
       console.error('Error signing out:', error);
+      // Even if there's an error, ensure we're logged out
+      setIsLoggedIn(false);
+      setUser(null);
+      if (navigation) {
+        navigation.dispatch(
+          CommonActions.reset({
+            index: 0,
+            routes: [{ name: 'Login' }],
+          })
+        );
+      }
     }
   };
 

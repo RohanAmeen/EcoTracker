@@ -14,7 +14,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import BottomNav from '../components/BottomNav';
+import { useAuth } from '../AuthContext';
 import { authAPI } from '../services/api';
 
 const { height, width } = Dimensions.get('window');
@@ -77,7 +77,7 @@ const SignupScreen = ({ navigation }) => {
               resizeMode="contain"
             />
             <Text style={styles.appTitle}>EcoTracker</Text>
-            <Text style={styles.subtitle}>Protecting Our Environment Together</Text>
+            <Text style={styles.subtitle}>Join Our Environmental Protection Community</Text>
           </View>
 
           <View style={styles.formContainer}>
@@ -85,7 +85,7 @@ const SignupScreen = ({ navigation }) => {
             <Text style={styles.label}>Username</Text>
             <TextInput
               style={styles.input}
-              placeholder="Enter your username"
+              placeholder="Choose a username"
               value={username}
               onChangeText={setUsername}
               autoCapitalize="none"
@@ -106,7 +106,7 @@ const SignupScreen = ({ navigation }) => {
             <Text style={styles.label}>Password</Text>
             <TextInput
               style={styles.input}
-              placeholder="Enter your password"
+              placeholder="Create a password"
               value={password}
               onChangeText={setPassword}
               secureTextEntry
@@ -116,7 +116,7 @@ const SignupScreen = ({ navigation }) => {
             <Text style={styles.label}>Confirm Password</Text>
             <TextInput
               style={styles.input}
-              placeholder="Re-enter your password"
+              placeholder="Confirm your password"
               value={confirmPassword}
               onChangeText={setConfirmPassword}
               secureTextEntry
@@ -146,13 +146,9 @@ const SignupScreen = ({ navigation }) => {
             >
               <Text style={styles.loginButtonText}>Login</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.loginLink}>
-              <Text style={styles.loginLinkText}>Already have an account?</Text>
-            </TouchableOpacity>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-      <BottomNav navigation={navigation} currentScreen="Signup" />
     </SafeAreaView>
   );
 };
@@ -267,17 +263,6 @@ const styles = StyleSheet.create({
     color: '#4a5c39',
     fontSize: 17,
     fontWeight: 'bold',
-  },
-  loginLink: {
-    alignItems: 'center',
-    marginTop: 12,
-    marginBottom: 16,
-  },
-  loginLinkText: {
-    color: '#4a5c39',
-    fontSize: 15,
-    textDecorationLine: 'underline',
-    fontWeight: '500',
   },
   disabledButton: {
     opacity: 0.7,

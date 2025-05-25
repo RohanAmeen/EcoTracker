@@ -2,15 +2,15 @@ import React, { useEffect } from 'react';
 import { View, Text, Image, StyleSheet, Dimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Animatable from 'react-native-animatable';
+import { useAuth } from '../AuthContext';
 
-const SplashScreen = ({ navigation }) => {
+const SplashScreen = () => {
+  const { loading } = useAuth();
+
   useEffect(() => {
-    const timer = setTimeout(() => {
-      navigation.replace('Login'); // Change to your login screen name
-    }, 3000);
-   
-    return () => clearTimeout(timer);
-  }, [navigation]);
+    // The splash screen will automatically dismiss when loading is complete
+    // and the AppNavigator will handle the navigation based on auth state
+  }, [loading]);
 
   return (
     <LinearGradient

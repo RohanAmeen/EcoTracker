@@ -15,13 +15,12 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../AuthContext';
-import BottomNav from '../components/BottomNav';
 import { authAPI } from '../services/api';
 
 const { height, width } = Dimensions.get('window');
 
 const LoginScreen = ({ navigation }) => {
-  const { setIsLoggedIn } = useAuth();
+  const { setIsLoggedIn, setUser } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -41,6 +40,13 @@ const LoginScreen = ({ navigation }) => {
         return;
       }
 
+      if (!response.token || !response.user) {
+        Alert.alert('Error', 'Invalid response from server');
+        return;
+      }
+
+      // Only set logged in state if we have both token and user data
+      setUser(response.user);
       setIsLoggedIn(true);
       navigation.replace('Home');
     } catch (error) {
@@ -120,7 +126,6 @@ const LoginScreen = ({ navigation }) => {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-      <BottomNav navigation={navigation} currentScreen="Login" />
     </SafeAreaView>
   );
 };
