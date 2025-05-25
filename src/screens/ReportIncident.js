@@ -17,6 +17,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView as RNSafeAreaViewContext } from 'react-native-safe-area-context';
 import BottomNav from '../components/BottomNav';
 
+const { width } = Dimensions.get('window');
+
 const ReportIncident = ({ navigation }) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -123,69 +125,40 @@ const ReportIncident = ({ navigation }) => {
 
       <ScrollView style={styles.scrollViewContent} showsVerticalScrollIndicator={false}>
         <View style={styles.formContainer}>
-          <Text style={styles.sectionTitle}>Incident Details</Text>
-
-          <Text style={styles.label}>Title *</Text>
-          <TextInput
-            style={styles.input}
-            value={title}
-            onChangeText={setTitle}
-            placeholder="Brief description of the issue"
-            placeholderTextColor="#888"
-          />
-
-          <Text style={styles.label}>Description *</Text>
-          <TextInput
-            style={[styles.input, styles.textArea]}
-            value={description}
-            onChangeText={setDescription}
-            placeholder="Detailed description of the issue"
-            placeholderTextColor="#888"
-            multiline
-            numberOfLines={4}
-          />
-
-          <Text style={styles.label}>Location Details</Text>
-          <TextInput
-            style={[styles.input, styles.textArea]}
-            value={locationDetails}
-            onChangeText={setLocationDetails}
-            placeholder="e.g., 'Near Oak Street and Pine Avenue'"
-            placeholderTextColor="#888"
-            multiline
-            numberOfLines={2}
-          />
-
-          <Text style={styles.label}>Reported By</Text>
-          <TextInput
-            style={styles.input}
-            value={reportedBy}
-            onChangeText={setReportedBy}
-            placeholder="Your Name (Optional)"
-            placeholderTextColor="#888"
-          />
-
-          <Text style={styles.label}>Type *</Text>
-          <View style={styles.optionsContainer}>
-            {['trash', 'air', 'water', 'noise', 'other'].map((option) => (
-              <TouchableOpacity
-                key={option}
-                style={[
-                  styles.optionButton,
-                  type === option && styles.optionButtonSelected,
-                ]}
-                onPress={() => handleTypeSelect(option)}
-              >
-                <Text
+          <View style={styles.typeSection}>
+            <Text style={styles.sectionTitle}>What type of incident?</Text>
+            <View style={styles.typeContainer}>
+              {['trash', 'air', 'water', 'noise', 'other'].map((option) => (
+                <TouchableOpacity
+                  key={option}
                   style={[
-                    styles.optionText,
-                    type === option && styles.optionTextSelected,
+                    styles.typeButton,
+                    type === option && styles.typeButtonSelected,
                   ]}
+                  onPress={() => handleTypeSelect(option)}
                 >
-                  {option.charAt(0).toUpperCase() + option.slice(1)}
-                </Text>
-              </TouchableOpacity>
-            ))}
+                  <Icon 
+                    name={
+                      option === 'trash' ? 'delete' :
+                      option === 'air' ? 'air' :
+                      option === 'water' ? 'water-drop' :
+                      option === 'noise' ? 'volume-up' :
+                      'more-horiz'
+                    } 
+                    size={20} 
+                    color={type === option ? '#fff' : '#4a5c39'} 
+                  />
+                  <Text
+                    style={[
+                      styles.typeButtonText,
+                      type === option && styles.typeButtonTextSelected,
+                    ]}
+                  >
+                    {option.charAt(0).toUpperCase() + option.slice(1)}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
           </View>
 
           {isOtherType && (
@@ -200,67 +173,145 @@ const ReportIncident = ({ navigation }) => {
             </View>
           )}
 
-          <Text style={styles.label}>Severity *</Text>
-          <View style={styles.optionsContainer}>
-            {['low', 'medium', 'high'].map((option) => (
-              <TouchableOpacity
-                key={option}
-                style={[
-                  styles.optionButton,
-                  severity === option && styles.optionButtonSelected,
-                ]}
-                onPress={() => setSeverity(option)}
-              >
-                <Text
+          <View style={styles.severitySection}>
+            <Text style={styles.sectionTitle}>How severe is it?</Text>
+            <View style={styles.severityContainer}>
+              {['low', 'medium', 'high'].map((option) => (
+                <TouchableOpacity
+                  key={option}
                   style={[
-                    styles.optionText,
-                    severity === option && styles.optionTextSelected,
+                    styles.severityButton,
+                    severity === option && styles.severityButtonSelected,
+                    severity === option && { backgroundColor: getSeverityColor(option) }
                   ]}
+                  onPress={() => setSeverity(option)}
                 >
-                  {option.charAt(0).toUpperCase() + option.slice(1)}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          <Text style={styles.label}>Photos</Text>
-          <View style={styles.imagePreviewContainer}>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              {images.map((uri, index) => (
-                <View key={index} style={styles.imagePreviewWrapper}>
-                  <Image source={{ uri }} style={styles.imagePreview} />
-                  <TouchableOpacity style={styles.removeImageButton} onPress={() => removeImage(uri)}>
-                    <Icon name="close" size={18} color="#fff" />
-                  </TouchableOpacity>
-                </View>
+                  <View style={styles.severityButtonContent}>
+                    <Icon 
+                      name={
+                        option === 'low' ? 'arrow-downward' :
+                        option === 'medium' ? 'remove' :
+                        'arrow-upward'
+                      } 
+                      size={24} 
+                      color={severity === option ? '#fff' : '#4a5c39'} 
+                    />
+                    <Text
+                      style={[
+                        styles.severityButtonText,
+                        severity === option && styles.severityButtonTextSelected,
+                      ]}
+                    >
+                      {option.charAt(0).toUpperCase() + option.slice(1)}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
               ))}
-              <TouchableOpacity style={styles.addImageButton} onPress={pickImage}>
-                <Icon name="add-a-photo" size={24} color="#4a5c39" />
-                <Text style={styles.addImageButtonText}>Add Photo</Text>
-              </TouchableOpacity>
-            </ScrollView>
+            </View>
           </View>
-        </View>
 
-        <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-          <Text style={styles.submitButtonText}>Submit Report</Text>
-        </TouchableOpacity>
+          <View style={styles.detailsSection}>
+            <Text style={styles.sectionTitle}>Incident Details</Text>
+            
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Title *</Text>
+              <TextInput
+                style={styles.input}
+                value={title}
+                onChangeText={setTitle}
+                placeholder="Brief description of the issue"
+                placeholderTextColor="#888"
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Description *</Text>
+              <TextInput
+                style={[styles.input, styles.textArea]}
+                value={description}
+                onChangeText={setDescription}
+                placeholder="Detailed description of the issue"
+                placeholderTextColor="#888"
+                multiline
+                numberOfLines={4}
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Location Details</Text>
+              <TextInput
+                style={[styles.input, styles.textArea]}
+                value={locationDetails}
+                onChangeText={setLocationDetails}
+                placeholder="e.g., 'Near Oak Street and Pine Avenue'"
+                placeholderTextColor="#888"
+                multiline
+                numberOfLines={2}
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Reported By</Text>
+              <TextInput
+                style={styles.input}
+                value={reportedBy}
+                onChangeText={setReportedBy}
+                placeholder="Your Name (Optional)"
+                placeholderTextColor="#888"
+              />
+            </View>
+          </View>
+
+          <View style={styles.photosSection}>
+            <Text style={styles.sectionTitle}>Add Photos</Text>
+            <View style={styles.imagePreviewContainer}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                {images.map((uri, index) => (
+                  <View key={index} style={styles.imagePreviewWrapper}>
+                    <Image source={{ uri }} style={styles.imagePreview} />
+                    <TouchableOpacity style={styles.removeImageButton} onPress={() => removeImage(uri)}>
+                      <Icon name="close" size={18} color="#fff" />
+                    </TouchableOpacity>
+                  </View>
+                ))}
+                <TouchableOpacity style={styles.addImageButton} onPress={pickImage}>
+                  <Icon name="add-a-photo" size={24} color="#4a5c39" />
+                  <Text style={styles.addImageButtonText}>Add Photo</Text>
+                </TouchableOpacity>
+              </ScrollView>
+            </View>
+          </View>
+
+          <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
+            <Text style={styles.submitButtonText}>Submit Report</Text>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
       <BottomNav navigation={navigation} currentScreen="ReportIncident" />
     </RNSafeAreaViewContext>
   );
 };
 
+const getSeverityColor = (severity) => {
+  switch (severity) {
+    case 'low':
+      return '#8ca982';
+    case 'medium':
+      return '#6b7a5e';
+    case 'high':
+      return '#4a5c39';
+    default:
+      return '#8ca982';
+  }
+};
+
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#f0ede3',
-  },
-  scrollViewContent: {
-    paddingVertical: 20,
+    backgroundColor: '#f6f8f3',
   },
   gradientHeader: {
-    paddingVertical: 15,
+    paddingVertical: 12,
     paddingHorizontal: 16,
   },
   headerContent: {
@@ -268,140 +319,197 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   backButton: {
-    marginRight: 15,
-    padding: 5,
+    marginRight: 16,
   },
   headerTitle: {
     fontSize: 20,
     fontWeight: 'bold',
     color: '#fff',
   },
+  scrollViewContent: {
+    flex: 1,
+  },
   formContainer: {
-    backgroundColor: '#fff',
-    marginHorizontal: 16,
-    borderRadius: 12,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    padding: 16,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: 'bold',
     color: '#2d3a22',
-    marginBottom: 20,
-    textAlign: 'center',
+    marginBottom: 16,
+    
+  },
+  typeSection: {
+    marginBottom: 95,
+  },
+  typeContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  typeButton: {
+    flex: 1,
+    minWidth: '30%',
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    padding: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: '#e0e4da',
+  },
+  typeButtonSelected: {
+    backgroundColor: '#4a5c39',
+    borderColor: '#4a5c39',
+  },
+  typeButtonText: {
+    marginTop: 6,
+    fontSize: 13,
+    color: '#4a5c39',
+    fontWeight: '500',
+  },
+  typeButtonTextSelected: {
+    color: '#fff',
+  },
+  severitySection: {
+    marginBottom: 24,
+  },
+  severityContainer: {
+    gap: 8,
+  },
+  severityButton: {
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: '#e0e4da',
+  },
+  severityButtonSelected: {
+    backgroundColor: '#4a5c39',
+    borderColor: '#4a5c39',
+  },
+  severityButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  severityButtonText: {
+    fontSize: 16,
+    color: '#4a5c39',
+    fontWeight: '500',
+  },
+  severityButtonTextSelected: {
+    color: '#fff',
+  },
+  detailsSection: {
+    marginBottom: 24,
+  },
+  inputGroup: {
+    marginBottom: 16,
   },
   label: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#555',
+    fontSize: 14,
+    color: '#4a5c39',
     marginBottom: 8,
-    marginTop: 10,
+    fontWeight: '500',
   },
   input: {
-    backgroundColor: '#f8f8f8',
+    backgroundColor: '#fff',
+    borderRadius: 12,
     padding: 12,
-    borderRadius: 8,
-    marginBottom: 15,
     fontSize: 16,
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-    color: '#333',
+    color: '#2d3a22',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
   textArea: {
-    height: 100,
+    minHeight: 100,
     textAlignVertical: 'top',
   },
   otherInputContainer: {
-    marginBottom: 15,
+    marginBottom: 24,
   },
   otherInput: {
-    borderColor: '#8ca982',
-    backgroundColor: '#eaf3e6',
+    marginTop: 8,
   },
-  optionsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
-  optionButton: {
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: '#eee',
-    marginRight: 10,
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: '#ddd',
-  },
-  optionButtonSelected: {
-    backgroundColor: '#8ca982',
-    borderColor: '#8ca982',
-  },
-  optionText: {
-    color: '#555',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  optionTextSelected: {
-    color: '#fff',
+  photosSection: {
+    marginBottom: 24,
   },
   imagePreviewContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 20,
+    marginTop: 8,
   },
   imagePreviewWrapper: {
+    marginRight: 12,
     position: 'relative',
-    marginRight: 10,
   },
   imagePreview: {
-    width: 80,
-    height: 80,
-    borderRadius: 8,
-    resizeMode: 'cover',
+    width: 100,
+    height: 100,
+    borderRadius: 12,
   },
   removeImageButton: {
     position: 'absolute',
-    top: 5,
-    right: 5,
-    backgroundColor: 'rgba(255, 0, 0, 0.6)',
-    borderRadius: 10,
-    padding: 2,
+    top: -8,
+    right: -8,
+    backgroundColor: '#ff4444',
+    borderRadius: 12,
+    width: 24,
+    height: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   addImageButton: {
-    width: 80,
-    height: 80,
-    borderRadius: 8,
-    backgroundColor: '#f0f0f0',
-    justifyContent: 'center',
+    width: 100,
+    height: 100,
+    backgroundColor: '#fff',
+    borderRadius: 12,
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#ddd',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#e0e4da',
+    borderStyle: 'dashed',
+    marginRight: 12,
   },
   addImageButtonText: {
-    fontSize: 10,
+    marginTop: 8,
+    fontSize: 12,
     color: '#4a5c39',
-    marginTop: 4,
   },
   submitButton: {
     backgroundColor: '#4a5c39',
-    padding: 15,
-    borderRadius: 10,
+    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
     alignItems: 'center',
-    marginTop: 10,
+    justifyContent: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+    marginHorizontal: 16,
+    marginBottom: 48,
+    flexDirection: 'row',
+    gap: 8,
   },
   submitButtonText: {
     color: '#fff',
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
+    letterSpacing: 0.5,
   },
 });
 

@@ -10,12 +10,12 @@ import {
   Alert,
   Image,
   Dimensions,
-  SafeAreaView,
   ScrollView,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import BottomNav from '../components/BottomNav';
 
-const { height } = Dimensions.get('window');
+const { height, width } = Dimensions.get('window');
 
 const SignupScreen = ({ navigation }) => {
   const [name, setName] = useState('');
@@ -37,29 +37,24 @@ const SignupScreen = ({ navigation }) => {
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.outerContainer}
-    >
-      <SafeAreaView style={styles.outerContainer}>
-        <LinearGradient
-          colors={["#b7c9a8", "#8ca982"]}
-          style={styles.gradientHeader}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 0, y: 1 }}
-        >
-          <Image
-            source={require('../../assets/logo.png')}
-            style={styles.logo}
-            resizeMode="contain"
-          />
-          <Text style={styles.appTitle}>EcoTracker</Text>
-          <Text style={styles.subtitle}>Protecting Our Environment Together</Text>
-        </LinearGradient>
+    <SafeAreaView style={styles.safeArea} edges={["top", "left", "right", "bottom"]}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.container}
+      >
+        <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+          <View style={styles.header}>
+            <Image
+              source={require('../../assets/logo.png')}
+              style={styles.logo}
+              resizeMode="contain"
+            />
+            <Text style={styles.appTitle}>EcoTracker</Text>
+            <Text style={styles.subtitle}>Protecting Our Environment Together</Text>
+          </View>
 
-        <View style={styles.formContainer}>
-          <Text style={styles.welcome}>Create Account</Text>
-          <View style={styles.flexGrowFields}>
+          <View style={styles.formContainer}>
+            <Text style={styles.welcome}>Create Account</Text>
             <Text style={styles.label}>Full Name</Text>
             <TextInput
               style={styles.input}
@@ -97,16 +92,12 @@ const SignupScreen = ({ navigation }) => {
               secureTextEntry
               placeholderTextColor="#b0b0b0"
             />
-          </View>
-
-          {/* Buttons always visible at the bottom */}
-          <View style={styles.bottomButtons}>
             <TouchableOpacity style={styles.signupButton} onPress={handleSignup}>
               <Text style={styles.signupButtonText}>Sign Up</Text>
             </TouchableOpacity>
             <View style={styles.dividerRow}>
               <View style={styles.divider} />
-              <Text style={styles.orText}>Already have an account?</Text>
+              <Text style={styles.orText}>or</Text>
               <View style={styles.divider} />
             </View>
             <TouchableOpacity
@@ -115,35 +106,41 @@ const SignupScreen = ({ navigation }) => {
             >
               <Text style={styles.loginButtonText}>Login</Text>
             </TouchableOpacity>
+            <TouchableOpacity style={styles.loginLink}>
+              <Text style={styles.loginLinkText}>Already have an account?</Text>
+            </TouchableOpacity>
           </View>
-        </View>
-      </SafeAreaView>
-    </KeyboardAvoidingView>
+        </ScrollView>
+      </KeyboardAvoidingView>
+      <BottomNav navigation={navigation} currentScreen="Signup" />
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  outerContainer: {
+  safeArea: {
     flex: 1,
-    backgroundColor: '#f6f8f3',
+    backgroundColor: '#4a5c39',
   },
-  gradientHeader: {
+  container: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+  },
+  header: {
     width: '100%',
-    height: height * 0.25,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingTop: 32,
     paddingBottom: 16,
-    borderBottomLeftRadius: 0,
-    borderBottomRightRadius: 0,
+    backgroundColor: '#4a5c39',
   },
   logo: {
     width: 56,
     height: 56,
-    marginBottom: 10,
   },
   appTitle: {
-    fontSize: 26,
+    fontSize: 28,
     fontWeight: 'bold',
     color: '#fff',
     marginBottom: 4,
@@ -156,29 +153,28 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   formContainer: {
-    flex: 1,
-    paddingHorizontal: 28,
-    paddingTop: 28,
-    paddingBottom: 16,
-    backgroundColor: 'transparent',
+    backgroundColor: '#fff',
     width: '100%',
     maxWidth: 500,
     alignSelf: 'center',
-    justifyContent: 'space-between',
-  },
-  flexGrowFields: {
-    flexGrow: 1,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+    paddingHorizontal: 28,
+    paddingTop: 28,
+    paddingBottom: 24,
   },
   welcome: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: '#4b5e3c',
+    color: '#4a5c39',
     marginBottom: 18,
     textAlign: 'center',
   },
   label: {
     fontSize: 14,
-    color: '#6b7a5e',
+    color: '#4a5c39',
     marginBottom: 6,
     marginTop: 10,
   },
@@ -192,15 +188,12 @@ const styles = StyleSheet.create({
     borderColor: '#e0e4da',
     color: '#333',
   },
-  bottomButtons: {
-    marginTop: 12,
-  },
   signupButton: {
-    backgroundColor: '#6b7a5e',
+    backgroundColor: '#4a5c39',
     borderRadius: 8,
     paddingVertical: 14,
     alignItems: 'center',
-    marginBottom: 16,
+    marginTop: 16,
   },
   signupButtonText: {
     color: '#fff',
@@ -210,7 +203,7 @@ const styles = StyleSheet.create({
   dividerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 10,
+    marginVertical: 18,
   },
   divider: {
     flex: 1,
@@ -219,21 +212,32 @@ const styles = StyleSheet.create({
   },
   orText: {
     marginHorizontal: 10,
-    color: '#6b7a5e',
-    fontSize: 13,
+    color: '#b0b0b0',
+    fontSize: 14,
   },
   loginButton: {
     borderWidth: 1.5,
-    borderColor: '#6b7a5e',
+    borderColor: '#4a5c39',
     borderRadius: 8,
     paddingVertical: 14,
     alignItems: 'center',
     backgroundColor: '#fff',
   },
   loginButtonText: {
-    color: '#6b7a5e',
+    color: '#4a5c39',
     fontSize: 17,
     fontWeight: 'bold',
+  },
+  loginLink: {
+    alignItems: 'center',
+    marginTop: 12,
+    marginBottom: 16,
+  },
+  loginLinkText: {
+    color: '#4a5c39',
+    fontSize: 15,
+    textDecorationLine: 'underline',
+    fontWeight: '500',
   },
 });
 

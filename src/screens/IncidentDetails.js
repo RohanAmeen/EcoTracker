@@ -3,14 +3,19 @@ import {
   View,
   Text,
   StyleSheet,
-  Image,
+  ScrollView,
   TouchableOpacity,
-  Dimensions,
+  Image,
   FlatList,
-  SafeAreaView,
+  Dimensions,
+  Share,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import { LinearGradient } from 'expo-linear-gradient';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import BottomNav from '../components/BottomNav';
+
+const { width } = Dimensions.get('window');
 
 const IncidentDetails = ({ route, navigation }) => {
   const { incident } = route.params;
@@ -18,156 +23,173 @@ const IncidentDetails = ({ route, navigation }) => {
   const getSeverityColor = (severity) => {
     switch (severity) {
       case 'high':
-        return '#FF4444';
+        return '#ff4444';
       case 'medium':
-        return '#FFBB33';
+        return '#ffbb33';
       case 'low':
         return '#00C851';
       default:
-        return '#4CAF50';
+        return '#4a5c39';
     }
   };
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'new':
-        return '#FF4444';
-      case 'in-progress':
-        return '#FFBB33';
-      case 'fixed':
-        return '#00C851';
+  const getTypeIcon = (type) => {
+    switch (type) {
+      case 'trash':
+        return 'delete';
+      case 'air':
+        return 'air';
+      case 'water':
+        return 'water-drop';
+      case 'noise':
+        return 'volume-up';
       default:
-        return '#4CAF50';
+        return 'warning';
+    }
+  };
+
+  const handleShare = async () => {
+    try {
+      await Share.share({
+        message: `Environmental Incident Report: ${incident.title}\nLocation: ${incident.locationDetails}\nSeverity: ${incident.severity}\nStatus: ${incident.status}`,
+      });
+    } catch (error) {
+      console.error(error);
     }
   };
 
   const renderHeader = () => (
-    <>
-      {/* Header Image */}
-      <View style={styles.imageContainer}>
-        <Image
-          source={{ uri: incident.images && incident.images.length > 0 ? incident.images[0] : 'https://via.placeholder.com/400x200' }}
-          style={styles.image}
-        />
-        {/* Back Button */}
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Icon name="arrow-back" size={24} color="#fff" />
-        </TouchableOpacity>
-      </View>
+    <View style={styles.header}>
+      <LinearGradient
+        colors={['#2A7B9B', '#57C785']}
+        style={styles.gradientHeader}
+      >
+        <View style={styles.headerContent}>
+          <TouchableOpacity 
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+          >
+            <Icon name="arrow-back" size={24} color="#fff" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Incident Details</Text>
+          <TouchableOpacity style={styles.shareButton} onPress={handleShare}>
+            <Icon name="share" size={24} color="#fff" />
+          </TouchableOpacity>
+        </View>
+      </LinearGradient>
 
-      {/* Photos Section */}
-      <View style={styles.photosContainer}>
-        <Text style={styles.sectionTitle}>Photos</Text>
-        {incident.images && incident.images.length > 0 ? (
-          <FlatList
-            horizontal
-            data={incident.images}
-            keyExtractor={(item, index) => `photo-${index}`}
-            renderItem={({ item }) => (
-              <Image source={{ uri: item }} style={styles.galleryImage} />
-            )}
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.imageGallery}
+      <View style={styles.incidentHeader}>
+        <View style={styles.titleContainer}>
+          <Icon 
+            name={getTypeIcon(incident.type)} 
+            size={28} 
+            color={getSeverityColor(incident.severity)} 
+            style={styles.typeIcon}
           />
-        ) : (
-          <Text style={styles.noDataText}>No additional photos available.</Text>
-        )}
+          <Text style={styles.title}>{incident.title}</Text>
+        </View>
+        
+        <View style={styles.statusContainer}>
+          <View style={[styles.severityBadge, { backgroundColor: getSeverityColor(incident.severity) }]}>
+            <Text style={styles.severityText}>{incident.severity.toUpperCase()}</Text>
+          </View>
+          <View style={[styles.statusBadge, { backgroundColor: incident.status === 'new' ? '#4a5c39' : '#2A7B9B' }]}>
+            <Text style={styles.statusText}>{incident.status.toUpperCase()}</Text>
+          </View>
+        </View>
+      </View>
+    </View>
+  );
+
+  const renderImageGallery = () => (
+    <View style={styles.imageGallery}>
+      <Text style={styles.sectionTitle}>Photos</Text>
+      <ScrollView 
+        horizontal 
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.imageGalleryContent}
+      >
+        {incident.images.map((image, index) => (
+          <Image 
+            key={index}
+            source={{ uri: image }}
+            style={styles.incidentImage}
+            resizeMode="cover"
+          />
+        ))}
+      </ScrollView>
+    </View>
+  );
+
+  const renderDetails = () => (
+    <View style={styles.detailsContainer}>
+      <View style={styles.detailSection}>
+        <Text style={styles.sectionTitle}>Description</Text>
+        <Text style={styles.description}>{incident.description}</Text>
       </View>
 
-      {/* Main Content */}
-      <View style={styles.content}>
-        <Text style={styles.title}>{incident.title}</Text>
-
-        {/* Date and Reported By */}
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Date:</Text>
-          <Text style={styles.infoText}>{incident.date}</Text>
+      <View style={styles.detailSection}>
+        <Text style={styles.sectionTitle}>Location</Text>
+        <View style={styles.locationContainer}>
+          <Icon name="location-on" size={20} color="#4a5c39" />
+          <Text style={styles.locationText}>{incident.locationDetails}</Text>
         </View>
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Reported By:</Text>
-          <Text style={styles.infoText}>{incident.reportedBy}</Text>
-        </View>
-
-        {/* Status, Severity, and Type */}
-        <View style={styles.badgeContainer}>
-          <View style={[styles.badge, { backgroundColor: getStatusColor(incident.status) }]}>
-            <Text style={styles.badgeText}>
-              {incident.status.charAt(0).toUpperCase() + incident.status.slice(1)}
-            </Text>
-          </View>
-          <View style={[styles.badge, { backgroundColor: getSeverityColor(incident.severity) }]}>
-            <Text style={styles.badgeText}>
-              {incident.severity.charAt(0).toUpperCase() + incident.severity.slice(1)} Severity
-            </Text>
-          </View>
-          <View style={[styles.badge, { backgroundColor: '#03A9F4' }]}>
-            <Text style={styles.badgeText}>
-              {incident.type.charAt(0).toUpperCase() + incident.type.slice(1)}
-            </Text>
-          </View>
-        </View>
-
-        {/* Description */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Description</Text>
-          <Text style={styles.description}>{incident.description}</Text>
-        </View>
-
-        {/* Location Details */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Location Details</Text>
-          {incident.locationDetails ? (
-            <Text style={styles.description}>{incident.locationDetails}</Text>
-          ) : (
-            <Text style={styles.noDataText}>No specific location details provided.</Text>
-          )}
-        </View>
-
-        {/* Location Coordinates */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Coordinates</Text>
-          <Text style={styles.locationText}>
+        <View style={styles.coordinatesContainer}>
+          <Text style={styles.coordinateText}>
             Latitude: {incident.coordinate.latitude.toFixed(6)}
           </Text>
-          <Text style={styles.locationText}>
+          <Text style={styles.coordinateText}>
             Longitude: {incident.coordinate.longitude.toFixed(6)}
           </Text>
         </View>
       </View>
-    </>
+
+      <View style={styles.detailSection}>
+        <Text style={styles.sectionTitle}>Report Details</Text>
+        <View style={styles.reportInfo}>
+          <View style={styles.infoRow}>
+            <Icon name="person" size={20} color="#4a5c39" />
+            <Text style={styles.infoText}>Reported by: {incident.reportedBy}</Text>
+          </View>
+          <View style={styles.infoRow}>
+            <Icon name="event" size={20} color="#4a5c39" />
+            <Text style={styles.infoText}>Date: {incident.date}</Text>
+          </View>
+        </View>
+      </View>
+    </View>
   );
 
-  const renderUpdate = ({ item }) => (
-    <View style={styles.updateItem}>
-      <Text style={styles.updateDate}>{item.date}: </Text>
-      <Text style={styles.updateText}>{item.text}</Text>
+  const renderUpdates = () => (
+    <View style={styles.updatesContainer}>
+      <Text style={styles.sectionTitle}>Updates</Text>
+      {incident.updates.map((update, index) => (
+        <View key={update.id} style={styles.updateItem}>
+          <View style={styles.updateHeader}>
+            <Icon 
+              name={update.status === 'new' ? 'fiber-new' : 'update'} 
+              size={20} 
+              color={update.status === 'new' ? '#4a5c39' : '#2A7B9B'} 
+            />
+            <Text style={styles.updateDate}>{update.date}</Text>
+          </View>
+          <Text style={styles.updateText}>{update.text}</Text>
+        </View>
+      ))}
     </View>
   );
 
   return (
     <SafeAreaView style={styles.container}>
-      <FlatList
-        data={incident.updates || []}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={renderUpdate}
-        ListHeaderComponent={renderHeader}
-        ListFooterComponent={
-          <View style={styles.actionButtons}>
-            <TouchableOpacity style={styles.actionButton}>
-              <Icon name="share" size={24} color="#4a5c39" />
-              <Text style={styles.actionButtonText}>Share</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.actionButton}>
-              <Icon name="flag" size={24} color="#4a5c39" />
-              <Text style={styles.actionButtonText}>Report</Text>
-            </TouchableOpacity>
-          </View>
-        }
-        contentContainerStyle={styles.listContent}
-      />
+      <ScrollView 
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+      >
+        {renderHeader()}
+        {renderImageGallery()}
+        {renderDetails()}
+        {renderUpdates()}
+      </ScrollView>
       <BottomNav navigation={navigation} currentScreen="IncidentDetails" />
     </SafeAreaView>
   );
@@ -176,158 +198,175 @@ const IncidentDetails = ({ route, navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f0ede3',
+    backgroundColor: '#f0f2ed',
   },
-  listContent: {
-    paddingBottom: 100, // Add padding for bottom nav
+  scrollView: {
+    flex: 1,
   },
-  imageContainer: {
-    position: 'relative',
+  header: {
+    backgroundColor: '#fff',
+    marginBottom: 12,
   },
-  image: {
-    width: Dimensions.get('window').width,
-    height: 250, // Slightly larger image
-    resizeMode: 'cover',
+  gradientHeader: {
+    paddingTop: 12,
+    paddingBottom: 12,
+  },
+  headerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
   },
   backButton: {
-    position: 'absolute',
-    top: 40,
-    left: 20,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
     padding: 8,
-    borderRadius: 20,
-    zIndex: 1, // Ensure button is clickable
   },
-  photosContainer: {
-    backgroundColor: '#fff', // Match card background
-    marginHorizontal: 16, // Match card horizontal margin
-    marginTop: -140, // Use a larger negative margin to pull it up further. ADJUST AS NEEDED.
-    marginBottom: 20, // Space below photos section
-    borderRadius: 12, // Match card border radius
-    paddingTop: 15, // Padding inside the card
-    paddingBottom: 15,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#fff',
+  },
+  shareButton: {
+    padding: 8,
+  },
+  incidentHeader: {
+    padding: 16,
+    backgroundColor: '#fff',
+  },
+  titleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  typeIcon: {
+    marginRight: 12,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#2d3a22',
+    flex: 1,
+  },
+  statusContainer: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  severityBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+  statusBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+  severityText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 12,
+  },
+  statusText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 12,
+  },
+  imageGallery: {
+    backgroundColor: '#fff',
+    paddingVertical: 16,
+    marginBottom: 12,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '700',
-    color: '#2d3a22', // Dark green
-    marginBottom: 10,
-    paddingHorizontal: 15, // Add horizontal padding to title within photos container
-  },
-  imageGallery: {
-    paddingHorizontal: 15, // Add horizontal padding to the FlatList content
-  },
-  galleryImage: {
-    width: 160,
-    height: 160,
-    borderRadius: 10,
-    marginRight: 12,
-    resizeMode: 'cover',
-  },
-  noDataText: {
-    fontSize: 16,
-    color: '#888',
-    textAlign: 'center',
-    marginTop: 10,
-    paddingHorizontal: 15, // Add horizontal padding
-  },
-  title: {
-    fontSize: 26,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 15,
-    marginTop: 0, // Remove top margin here as photos are above
-  },
-  infoRow: {
-    flexDirection: 'row',
-    marginBottom: 8,
-  },
-  infoLabel: {
-    fontSize: 16,
     fontWeight: '600',
-    color: '#555',
-    marginRight: 8,
+    color: '#2d3a22',
+    marginBottom: 12,
+    paddingHorizontal: 16,
   },
-  infoText: {
-    fontSize: 16,
-    color: '#666',
+  imageGalleryContent: {
+    paddingHorizontal: 16,
   },
-  badgeContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginBottom: 20,
-  },
-  badge: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 15,
-    marginRight: 10,
-    marginBottom: 5,
-  },
-  badgeText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-  section: {
-    marginBottom: 25,
-    backgroundColor: '#fff',
+  incidentImage: {
+    width: width * 0.7,
+    height: 200,
     borderRadius: 12,
-    padding: 15,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    marginRight: 12,
+  },
+  detailsContainer: {
+    backgroundColor: '#fff',
+    paddingVertical: 16,
+    marginBottom: 12,
+  },
+  detailSection: {
+    paddingHorizontal: 16,
+    marginBottom: 24,
   },
   description: {
     fontSize: 16,
-    color: '#444',
+    color: '#4a5c39',
     lineHeight: 24,
+  },
+  locationContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
   },
   locationText: {
     fontSize: 16,
-    color: '#444',
-    marginBottom: 5,
+    color: '#4a5c39',
+    marginLeft: 8,
+    flex: 1,
+  },
+  coordinatesContainer: {
+    backgroundColor: '#e8ebe3',
+    padding: 12,
+    borderRadius: 8,
+    marginTop: 8,
+  },
+  coordinateText: {
+    fontSize: 14,
+    color: '#4a5c39',
+    marginBottom: 4,
+  },
+  reportInfo: {
+    backgroundColor: '#e8ebe3',
+    padding: 12,
+    borderRadius: 8,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  infoText: {
+    fontSize: 16,
+    color: '#4a5c39',
+    marginLeft: 8,
+  },
+  updatesContainer: {
+    backgroundColor: '#fff',
+    paddingVertical: 16,
+    marginBottom: 80,
   },
   updateItem: {
-    flexDirection: 'row',
-    marginBottom: 8,
-    paddingBottom: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
   },
+  updateHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
   updateDate: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#555',
+    color: '#666',
+    marginLeft: 8,
   },
   updateText: {
-    flex: 1,
-    fontSize: 14,
-    color: '#444',
-  },
-  actionButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginTop: 20,
-    paddingVertical: 20,
-    borderTopWidth: 1,
-    borderTopColor: '#eee',
-  },
-  actionButton: {
-    alignItems: 'center',
-  },
-  actionButtonText: {
-    color: '#4a5c39', // Dark green
-    marginTop: 5,
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: 16,
+    color: '#4a5c39',
+    lineHeight: 22,
   },
 });
 

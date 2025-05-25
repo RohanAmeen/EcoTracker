@@ -25,12 +25,14 @@ import BottomNav from '../components/BottomNav';
 const HomeScreen = ({ navigation }) => {
   const { isLoggedIn } = useAuth();
   const [region, setRegion] = useState({
-    latitude: 37.78825,
-    longitude: -122.4324,
-    latitudeDelta: 0.0922,
-    longitudeDelta: 0.0421,
+    latitude: 30.3753,  // Center of Pakistan
+    longitude: 69.3451, // Center of Pakistan
+    latitudeDelta: 8,   // Closer zoom level to show Pakistan
+    longitudeDelta: 8,  // Closer zoom level to show Pakistan
   });
   const [search, setSearch] = useState('');
+  const [isReportPressed, setIsReportPressed] = useState(false);
+  const [isViewReportsPressed, setIsViewReportsPressed] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -58,70 +60,155 @@ const HomeScreen = ({ navigation }) => {
     {
       id: 1,
       coordinate: {
-        latitude: 37.78825,
-        longitude: -122.4324,
+        latitude: 24.8607,
+        longitude: 67.0011,
       },
       title: 'Illegal Dumping',
       description: 'Large pile of construction waste',
       type: 'trash',
       severity: 'high',
       status: 'new',
-      date: '2023-10-27',
+      date: '2024-03-27',
       reportedBy: 'Anonymous',
       images: [
         'https://via.placeholder.com/300/b7c9a8/000000?text=Dumping+Photo+1',
         'https://via.placeholder.com/300/8ca982/ffffff?text=Dumping+Photo+2',
       ],
-      locationDetails: 'Near Oak Street and Pine Avenue',
+      locationDetails: 'Near Clifton Beach, Karachi',
       updates: [
-        { id: 1, text: 'Report received and under review.', date: '2023-10-27', status: 'new' },
-        { id: 2, text: 'Cleanup scheduled for next week.', date: '2023-10-30', status: 'in-progress' },
+        { id: 1, text: 'Report received and under review.', date: '2024-03-27', status: 'new' },
+        { id: 2, text: 'Cleanup scheduled for next week.', date: '2024-03-30', status: 'in-progress' },
       ],
     },
     {
       id: 2,
       coordinate: {
-        latitude: 37.79525,
-        longitude: -122.4434,
+        latitude: 31.5204,
+        longitude: 74.3587,
       },
       title: 'Air Pollution',
       description: 'Strong odor from nearby factory',
       type: 'air',
       severity: 'medium',
       status: 'in-progress',
-      date: '2023-10-26',
-      reportedBy: 'Alice',
+      date: '2024-03-26',
+      reportedBy: 'Ali',
       images: [
         'https://via.placeholder.com/300/8ca982/ffffff?text=Air+Photo+1',
       ],
-      locationDetails: 'Industrial Zone A',
+      locationDetails: 'Industrial Area, Lahore',
       updates: [
-        { id: 1, text: 'Investigation started.', date: '2023-10-26', status: 'in-progress' },
+        { id: 1, text: 'Investigation started.', date: '2024-03-26', status: 'in-progress' },
       ],
     },
-     {
+    {
       id: 3,
       coordinate: {
-        latitude: 37.77525,
-        longitude: -122.4184,
+        latitude: 33.6844,
+        longitude: 73.0479,
       },
       title: 'Water Contamination',
       description: 'Unusual color in the river',
       type: 'water',
       severity: 'high',
       status: 'new',
-      date: '2023-10-25',
-      reportedBy: 'Bob',
+      date: '2024-03-25',
+      reportedBy: 'Ahmed',
       images: [
         'https://via.placeholder.com/300/b7c9a8/000000?text=Water+Photo+1',
         'https://via.placeholder.com/300/8ca982/ffffff?text=Water+Photo+2',
-         'https://via.placeholder.com/300/b7c9a8/000000?text=Water+Photo+3',
+        'https://via.placeholder.com/300/b7c9a8/000000?text=Water+Photo+3',
       ],
-      locationDetails: 'Downtown Riverwalk',
+      locationDetails: 'Rawal Lake, Islamabad',
       updates: [
-        { id: 1, text: 'Sample collected for testing.', date: '2023-10-25', status: 'new' },
+        { id: 1, text: 'Sample collected for testing.', date: '2024-03-25', status: 'new' },
       ],
     },
+    {
+      id: 4,
+      coordinate: {
+        latitude: 25.3792,
+        longitude: 68.3667,
+      },
+      title: 'Industrial Waste',
+      description: 'Chemical waste being dumped into water body',
+      type: 'water',
+      severity: 'high',
+      status: 'new',
+      date: '2024-03-28',
+      reportedBy: 'Sara',
+      images: [
+        'https://via.placeholder.com/300/b7c9a8/000000?text=Waste+Photo+1',
+      ],
+      locationDetails: 'Hyderabad Industrial Zone',
+      updates: [
+        { id: 1, text: 'Emergency response team dispatched.', date: '2024-03-28', status: 'new' },
+      ],
+    },
+    {
+      id: 5,
+      coordinate: {
+        latitude: 34.0150,
+        longitude: 71.5805,
+      },
+      title: 'Air Quality Alert',
+      description: 'Severe smog conditions in the area',
+      type: 'air',
+      severity: 'high',
+      status: 'in-progress',
+      date: '2024-03-27',
+      reportedBy: 'Khan',
+      images: [
+        'https://via.placeholder.com/300/8ca982/ffffff?text=Smog+Photo+1',
+        'https://via.placeholder.com/300/b7c9a8/000000?text=Smog+Photo+2',
+      ],
+      locationDetails: 'Peshawar City Center',
+      updates: [
+        { id: 1, text: 'Air quality monitoring in progress.', date: '2024-03-27', status: 'in-progress' },
+      ],
+    },
+    {
+      id: 6,
+      coordinate: {
+        latitude: 30.1979,
+        longitude: 71.4697,
+      },
+      title: 'Plastic Pollution',
+      description: 'Massive plastic waste accumulation',
+      type: 'trash',
+      severity: 'medium',
+      status: 'new',
+      date: '2024-03-29',
+      reportedBy: 'Fatima',
+      images: [
+        'https://via.placeholder.com/300/b7c9a8/000000?text=Plastic+Photo+1',
+      ],
+      locationDetails: 'Multan City Park',
+      updates: [
+        { id: 1, text: 'Cleanup drive being organized.', date: '2024-03-29', status: 'new' },
+      ],
+    },
+    {
+      id: 7,
+      coordinate: {
+        latitude: 27.7000,
+        longitude: 68.8667,
+      },
+      title: 'Noise Pollution',
+      description: 'Excessive noise from construction site',
+      type: 'noise',
+      severity: 'medium',
+      status: 'in-progress',
+      date: '2024-03-28',
+      reportedBy: 'Usman',
+      images: [
+        'https://via.placeholder.com/300/8ca982/ffffff?text=Noise+Photo+1',
+      ],
+      locationDetails: 'Larkana Residential Area',
+      updates: [
+        { id: 1, text: 'Authorities notified.', date: '2024-03-28', status: 'in-progress' },
+      ],
+    }
   ];
 
   // Dummy data for recent incidents
@@ -151,6 +238,10 @@ const HomeScreen = ({ navigation }) => {
 
   const handleQuickReport = () => {
     navigation.navigate('ReportIncident');
+  };
+
+  const handleViewReports = () => {
+    navigation.navigate('Reports');
   };
 
   const handleLogin = () => {
@@ -228,20 +319,59 @@ const HomeScreen = ({ navigation }) => {
         </View>
         {/* Dashboard Buttons */}
         <View style={styles.dashboardButtonsContainer}>
-          <TouchableOpacity style={styles.reportButton} onPress={handleQuickReport}>
-            <Icon name="add" size={24} color="#2d3a22" style={styles.buttonLeadingIcon} />
-            <Text style={styles.reportButtonText}>Report Environmental Incident</Text>
-            <Icon name="chevron-right" size={24} color="#2d3a22" />
+          <TouchableOpacity 
+            style={[
+              styles.reportButton,
+              isReportPressed && styles.buttonPressed
+            ]} 
+            onPress={handleQuickReport}
+            onPressIn={() => setIsReportPressed(true)}
+            onPressOut={() => setIsReportPressed(false)}
+            activeOpacity={1}
+          >
+            <View style={styles.reportButtonContent}>
+              <View style={styles.reportButtonLeft}>
+                <View style={styles.reportIconContainer}>
+                  <Icon name="add" size={24} color={isReportPressed ? "#fff" : "#2d3a22"} />
+                </View>
+                <View style={styles.reportTextContainer}>
+                  <Text style={[styles.reportButtonTitle, isReportPressed && styles.buttonTextPressed]}>
+                    Report Environmental Incident
+                  </Text>
+                  <Text style={[styles.reportButtonSubtitle, isReportPressed && styles.buttonTextPressed]}>
+                    Help protect our environment
+                  </Text>
+                </View>
+              </View>
+              <Icon name="chevron-right" size={24} color={isReportPressed ? "#fff" : "#2d3a22"} />
+            </View>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.emergencyButton}>
-            <Icon name="error-outline" size={24} color="#fff" style={styles.buttonLeadingIcon} />
-            <Text style={styles.emergencyButtonText}>Emergency Report</Text>
-            <Icon name="chevron-right" size={24} color="#fff" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.viewReportsButton}>
-            <Icon name="list-alt" size={24} color="#2d3a22" style={styles.buttonLeadingIcon} />
-            <Text style={styles.viewReportsButtonText}>View My Reports</Text>
-            <Icon name="chevron-right" size={24} color="#2d3a22" />
+          <TouchableOpacity 
+            style={[
+              styles.viewReportsButton,
+              isViewReportsPressed && styles.buttonPressed
+            ]} 
+            onPress={handleViewReports}
+            onPressIn={() => setIsViewReportsPressed(true)}
+            onPressOut={() => setIsViewReportsPressed(false)}
+            activeOpacity={1}
+          >
+            <View style={styles.reportButtonContent}>
+              <View style={styles.reportButtonLeft}>
+                <View style={styles.reportIconContainer}>
+                  <Icon name="list-alt" size={24} color={isViewReportsPressed ? "#fff" : "#2d3a22"} />
+                </View>
+                <View style={styles.reportTextContainer}>
+                  <Text style={[styles.reportButtonTitle, isViewReportsPressed && styles.buttonTextPressed]}>
+                    View My Reports
+                  </Text>
+                  <Text style={[styles.reportButtonSubtitle, isViewReportsPressed && styles.buttonTextPressed]}>
+                    Track your contributions
+                  </Text>
+                </View>
+              </View>
+              <Icon name="chevron-right" size={24} color={isViewReportsPressed ? "#fff" : "#2d3a22"} />
+            </View>
           </TouchableOpacity>
         </View>
         {/* Recent Incidents */}
@@ -263,21 +393,26 @@ const HomeScreen = ({ navigation }) => {
         {/* Leaderboard */}
         <View style={styles.leaderboardSection}>
           <Text style={styles.sectionTitle}>Leaderboard</Text>
-          {leaderboardData.map((user, idx) => (
-            <View
-              key={user.id}
-              style={[
-                styles.leaderboardItem,
-                idx === 0 && styles.goldRank,
-                idx === 1 && styles.silverRank,
-                idx === 2 && styles.bronzeRank,
-              ]}
-            >
-              <Text style={styles.leaderboardRankText}>{idx + 1}</Text>
-              <Text style={styles.leaderboardName}>{user.name}</Text>
-              <Text style={styles.leaderboardPoints}>{user.points} pts</Text>
-            </View>
-          ))}
+          <ScrollView 
+            style={styles.leaderboardScrollView}
+            showsVerticalScrollIndicator={false}
+          >
+            {leaderboardData.map((user, idx) => (
+              <View
+                key={user.id}
+                style={[
+                  styles.leaderboardItem,
+                  idx === 0 && styles.goldRank,
+                  idx === 1 && styles.silverRank,
+                  idx === 2 && styles.bronzeRank,
+                ]}
+              >
+                <Text style={styles.leaderboardRankText}>{idx + 1}</Text>
+                <Text style={styles.leaderboardName}>{user.name}</Text>
+                <Text style={styles.leaderboardPoints}>{user.points} pts</Text>
+              </View>
+            ))}
+          </ScrollView>
         </View>
       </ScrollView>
       <BottomNav navigation={navigation} currentScreen="Home" />
@@ -357,20 +492,21 @@ const styles = StyleSheet.create({
   mapContainer: {
     marginHorizontal: 16,
     marginBottom: 16,
-    borderRadius: 12,
+    borderRadius: 16,
     overflow: 'hidden',
-    height: 180,
-    backgroundColor: '#e0e0e0',
-    justifyContent: 'center',
-    alignItems: 'center',
+    height: 250,
+    backgroundColor: '#fff',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 5,
+    borderWidth: 1,
+    borderColor: '#e8e8e8',
   },
   map: {
     ...StyleSheet.absoluteFillObject,
+    borderRadius: 16,
   },
   mapLabel: {
     position: 'absolute',
@@ -380,73 +516,76 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     opacity: 0.6,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
   },
   dashboardButtonsContainer: {
     marginHorizontal: 16,
     marginBottom: 16,
   },
   reportButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
     backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 8,
+    borderRadius: 16,
+    marginBottom: 12,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    shadowRadius: 4,
+    elevation: 3,
+    overflow: 'hidden',
   },
-  reportButtonText: {
-    flex: 1,
-    marginLeft: 10,
-    color: '#2d3a22',
-    fontWeight: '600',
-    fontSize: 16,
+  buttonPressed: {
+    backgroundColor: '#4a5c39',
   },
-  emergencyButton: {
+  reportButtonContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#4a5c39',
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    justifyContent: 'space-between',
+    padding: 16,
   },
-  emergencyButtonText: {
+  reportButtonLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
     flex: 1,
-    marginLeft: 10,
-    color: '#fff',
-    fontWeight: '600',
+  },
+  reportIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    backgroundColor: '#f6f8f3',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  reportTextContainer: {
+    flex: 1,
+  },
+  reportButtonTitle: {
     fontSize: 16,
+    fontWeight: '600',
+    color: '#2d3a22',
+    marginBottom: 4,
+  },
+  reportButtonSubtitle: {
+    fontSize: 13,
+    color: '#6b7a5e',
+    opacity: 0.8,
+  },
+  buttonTextPressed: {
+    color: '#fff',
   },
   viewReportsButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
     backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 8,
+    borderRadius: 16,
+    marginBottom: 12,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  viewReportsButtonText: {
-    flex: 1,
-    marginLeft: 10,
-    color: '#2d3a22',
-    fontWeight: '600',
-    fontSize: 16,
-  },
-  buttonLeadingIcon: {
-    marginRight: 6,
+    shadowRadius: 4,
+    elevation: 3,
+    overflow: 'hidden',
   },
   recentIncidentsSection: {
     backgroundColor: '#fff',
@@ -471,6 +610,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+    maxHeight: 300,
+  },
+  leaderboardScrollView: {
+    maxHeight: 215,
   },
   sectionTitle: {
     fontWeight: 'bold',

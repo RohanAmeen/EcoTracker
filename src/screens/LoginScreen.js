@@ -10,11 +10,11 @@ import {
   Alert,
   Image,
   Dimensions,
-  SafeAreaView,
   ScrollView,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../AuthContext';
+import BottomNav from '../components/BottomNav';
 
 const { height, width } = Dimensions.get('window');
 
@@ -33,18 +33,13 @@ const LoginScreen = ({ navigation }) => {
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.outerContainer}
-    >
-      <SafeAreaView style={styles.outerContainer}>
-        <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
-          <LinearGradient
-            colors={["#b7c9a8", "#8ca982"]}
-            style={styles.gradientHeader}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 0, y: 1 }}
-          >
+    <SafeAreaView style={styles.safeArea} edges={["top", "left", "right", "bottom"]}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.container}
+      >
+        <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+          <View style={styles.header}>
             <Image
               source={require('../../assets/logo.png')}
               style={styles.logo}
@@ -52,7 +47,7 @@ const LoginScreen = ({ navigation }) => {
             />
             <Text style={styles.appTitle}>EcoTracker</Text>
             <Text style={styles.subtitle}>Protecting Our Environment Together</Text>
-          </LinearGradient>
+          </View>
 
           <View style={styles.formContainer}>
             <Text style={styles.welcome}>Welcome</Text>
@@ -94,33 +89,36 @@ const LoginScreen = ({ navigation }) => {
             </TouchableOpacity>
           </View>
         </ScrollView>
-      </SafeAreaView>
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
+      <BottomNav navigation={navigation} currentScreen="Login" />
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  outerContainer: {
+  safeArea: {
     flex: 1,
-    backgroundColor: '#f6f8f3',
+    backgroundColor: '#4a5c39',
   },
-  gradientHeader: {
+  container: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+  },
+  header: {
     width: '100%',
-    height: height * 0.35,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingTop: 32,
     paddingBottom: 16,
-    borderBottomLeftRadius: 0,
-    borderBottomRightRadius: 0,
+    backgroundColor: '#4a5c39',
   },
   logo: {
     width: 56,
     height: 56,
-    marginBottom: 10,
   },
   appTitle: {
-    fontSize: 26,
+    fontSize: 28,
     fontWeight: 'bold',
     color: '#fff',
     marginBottom: 4,
@@ -133,25 +131,29 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   formContainer: {
-    flex: 1,
-    paddingHorizontal: 28,
-    paddingTop: 28,
-    paddingBottom: 16,
-    backgroundColor: 'transparent',
+    backgroundColor: '#fff',
     width: '100%',
     maxWidth: 500,
     alignSelf: 'center',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+    paddingHorizontal: 28,
+    paddingTop: 28,
+    paddingBottom: 24,
+    marginTop:50
   },
   welcome: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: '#4b5e3c',
+    color: '#4a5c39',
     marginBottom: 18,
     textAlign: 'center',
   },
   label: {
     fontSize: 14,
-    color: '#6b7a5e',
+    color: '#4a5c39',
     marginBottom: 6,
     marginTop: 10,
   },
@@ -166,7 +168,7 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   loginButton: {
-    backgroundColor: '#6b7a5e',
+    backgroundColor: '#4a5c39',
     borderRadius: 8,
     paddingVertical: 14,
     alignItems: 'center',
@@ -194,23 +196,24 @@ const styles = StyleSheet.create({
   },
   signupButton: {
     borderWidth: 1.5,
-    borderColor: '#6b7a5e',
+    borderColor: '#4a5c39',
     borderRadius: 8,
     paddingVertical: 14,
     alignItems: 'center',
     backgroundColor: '#fff',
   },
   signupButtonText: {
-    color: '#6b7a5e',
+    color: '#4a5c39',
     fontSize: 17,
     fontWeight: 'bold',
   },
   adminLink: {
     alignItems: 'center',
-    marginTop: 18,
+    marginTop: 12,
+    marginBottom: 16,
   },
   adminLinkText: {
-    color: '#6b7a5e',
+    color: '#4a5c39',
     fontSize: 15,
     textDecorationLine: 'underline',
     fontWeight: '500',
