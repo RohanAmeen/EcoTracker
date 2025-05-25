@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { NavigationContainer, useNavigation } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { useAuth } from '../AuthContext';
@@ -18,95 +18,53 @@ import ReportDetailsScreen from '../screens/ReportDetailsScreen';
 
 const Stack = createStackNavigator();
 
-// Stack for authenticated screens
-const AuthenticatedStack = () => {
+const AppNavigator = () => {
   const { isLoggedIn, user, isAdmin } = useAuth();
-  const navigation = useNavigation();
+  const [showSplash, setShowSplash] = useState(true);
 
   useEffect(() => {
-    if (!isLoggedIn || !user) {
-      // If user is not logged in or user data is missing, reset the navigation state and redirect to login
-      navigation.dispatch(
-        CommonActions.reset({
-          index: 0,
-          routes: [{ name: 'Login' }],
-        })
-      );
-    } else if (isAdmin) {
-      // If user is admin, redirect to admin dashboard
-      navigation.dispatch(
-        CommonActions.reset({
-          index: 0,
-          routes: [{ name: 'AdminDashboard' }],
-        })
-      );
-    }
-  }, [isLoggedIn, user, isAdmin, navigation]);
+    // Hide splash screen after 2.5 seconds
+    const timer = setTimeout(() => {
+      setShowSplash(false);
+    }, 2500);
 
-  if (!isLoggedIn || !user) {
-    return null; // Don't render anything if not logged in or user data is missing
-  }
+    return () => clearTimeout(timer);
+  }, []);
 
-  if (isAdmin) {
+  if (showSplash) {
     return (
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="AdminDashboard" component={AdminDashboard} />
-        <Stack.Screen name="ReportDetails" component={ReportDetailsScreen} />
-      </Stack.Navigator>
+      <NavigationContainer>
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="Splash" component={SplashScreen} />
+        </Stack.Navigator>
+      </NavigationContainer>
     );
   }
 
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="Home" component={HomeScreen} />
-      <Stack.Screen name="ReportIncident" component={ReportIncident} />
-      <Stack.Screen name="Profile" component={Profile} />
-      <Stack.Screen name="ChangePassword" component={ChangePassword} />
-      <Stack.Screen name="IncidentDetails" component={IncidentDetails} />
-      <Stack.Screen name="Reports" component={ReportsScreen} />
-    </Stack.Navigator>
-  );
-};
-
-// Stack for unauthenticated screens
-const UnauthenticatedStack = () => {
-  const { isLoggedIn, user, isAdmin } = useAuth();
-  const navigation = useNavigation();
-
-  useEffect(() => {
-    if (isLoggedIn && user) {
-      // If user is logged in and has user data, redirect based on admin status
-      navigation.dispatch(
-        CommonActions.reset({
-          index: 0,
-          routes: [{ name: isAdmin ? 'AdminDashboard' : 'Home' }],
-        })
-      );
-    }
-  }, [isLoggedIn, user, isAdmin, navigation]);
-
-  if (isLoggedIn && user) {
-    return null; // Don't render anything if logged in and has user data
-  }
-
-  return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="Login" component={LoginScreen} />
-      <Stack.Screen name="Signup" component={SignupScreen} />
-    </Stack.Navigator>
-  );
-};
-
-const AppNavigator = () => {
-  const { isLoggedIn, user, loading } = useAuth();
-
-  if (loading) {
-    return <SplashScreen />;
-  }
-
-  return (
     <NavigationContainer>
-      {isLoggedIn && user ? <AuthenticatedStack /> : <UnauthenticatedStack />}
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        {!isLoggedIn ? (
+          <>
+            <Stack.Screen name="Login" component={LoginScreen} />
+            <Stack.Screen name="Signup" component={SignupScreen} />
+          </>
+        ) : isAdmin ? (
+          <>
+            <Stack.Screen name="AdminDashboard" component={AdminDashboard} />
+            <Stack.Screen name="ReportDetails" component={ReportDetailsScreen} />
+          </>
+        ) : (
+          <>
+            <Stack.Screen name="Home" component={HomeScreen} />
+            <Stack.Screen name="ReportIncident" component={ReportIncident} />
+            <Stack.Screen name="Profile" component={Profile} />
+            <Stack.Screen name="ChangePassword" component={ChangePassword} />
+            <Stack.Screen name="IncidentDetails" component={IncidentDetails} />
+            <Stack.Screen name="Reports" component={ReportsScreen} />
+          </>
+        )}
+      </Stack.Navigator>
     </NavigationContainer>
   );
 };

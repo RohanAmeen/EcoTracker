@@ -1,17 +1,11 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { View, Text, Image, StyleSheet, Dimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Animatable from 'react-native-animatable';
-import { useAuth } from '../AuthContext';
+
+const { width, height } = Dimensions.get('window');
 
 const SplashScreen = () => {
-  const { loading } = useAuth();
-
-  useEffect(() => {
-    // The splash screen will automatically dismiss when loading is complete
-    // and the AppNavigator will handle the navigation based on auth state
-  }, [loading]);
-
   return (
     <LinearGradient
       colors={['#f6efdc', '#6b7d5c', '#f6efdc']}
@@ -20,23 +14,39 @@ const SplashScreen = () => {
       end={{ x: 0, y: 1 }}
     >
       <Animatable.View
-        animation="fadeInUp"
-        duration={2000}
+        animation="fadeIn"
+        duration={1500}
         style={styles.content}
       >
-        <Image
+        <Animatable.Image
+          animation="pulse"
+          easing="ease-out"
+          iterationCount="infinite"
+          duration={2000}
           source={require('../../assets/logo.png')}
           style={styles.logo}
           resizeMode="contain"
         />
-        <Text style={styles.title}>EcoTracker</Text>
-        <Text style={styles.tagline}>Community Environmental Protection Platform</Text>
+        <Animatable.Text
+          animation="fadeInUp"
+          delay={500}
+          duration={1000}
+          style={styles.title}
+        >
+          EcoTracker
+        </Animatable.Text>
+        <Animatable.Text
+          animation="fadeInUp"
+          delay={800}
+          duration={1000}
+          style={styles.tagline}
+        >
+          Community Environmental Protection Platform
+        </Animatable.Text>
       </Animatable.View>
     </LinearGradient>
   );
 };
-
-const { width, height } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
   container: {
@@ -46,29 +56,25 @@ const styles = StyleSheet.create({
   },
   content: {
     alignItems: 'center',
-    width: '90%',
+    justifyContent: 'center',
   },
   logo: {
-    width: width * 0.7, // 70% of screen width
-    height: width * 0.7,
-    marginBottom: 30,
+    width: width * 0.5,
+    height: width * 0.5,
+    marginBottom: 20,
   },
   title: {
-    color: '#3a4a2d',
-    fontSize: 32,
-    fontWeight: '600',
-    marginBottom: 15,
-    textShadowColor: 'rgba(0, 0, 0, 0.1)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 4,
-    fontFamily: 'Poppins-SemiBold',
+    fontSize: 36,
+    fontWeight: 'bold',
+    color: '#4a5c39',
+    marginBottom: 10,
+    textAlign: 'center',
   },
   tagline: {
-    color: '#5a6a4a',
     fontSize: 16,
-    letterSpacing: 0.5,
-    fontWeight: '400',
-    fontFamily: 'Poppins-Regular',
+    color: '#666',
+    textAlign: 'center',
+    paddingHorizontal: 20,
   },
 });
 
