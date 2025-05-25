@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
 
 const API_URL = 'http://192.168.100.177:5001/api';
 
@@ -65,6 +66,23 @@ const authAPI = {
       throw error;
     }
   },
+
+  forgotPassword: async (email) => {
+    try {
+      const response = await fetch(`${API_URL}/auth/forgot-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Forgot password error:', error);
+      throw error;
+    }
+  },
 };
 
 // Incidents API calls
@@ -76,14 +94,48 @@ const incidentsAPI = {
         throw new Error('No authentication token found');
       }
 
+      // Create FormData object
+      const formData = new FormData();
+      
+      // Add text fields
+      formData.append('title', incidentData.title);
+      formData.append('description', incidentData.description);
+      formData.append('type', incidentData.type);
+      formData.append('severity', incidentData.severity);
+      formData.append('status', incidentData.status);
+      formData.append('location', JSON.stringify(incidentData.location));
+
+      // Add images
+      if (incidentData.images && incidentData.images.length > 0) {
+        incidentData.images.forEach((uri, index) => {
+          const filename = uri.split('/').pop();
+          const match = /\.(\w+)$/.exec(filename);
+          const type = match ? `image/${match[1]}` : 'image/jpeg';
+          
+          formData.append('images', {
+            uri: Platform.OS === 'ios' ? uri.replace('file://', '') : uri,
+            name: filename,
+            type
+          });
+        });
+      }
+
+      console.log('Sending form data:', formData);
+
       const response = await fetch(`${API_URL}/incidents`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data',
         },
-        body: JSON.stringify(incidentData),
+        body: formData,
       });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Server returned ${response.status}: ${errorText}`);
+      }
+
       return await response.json();
     } catch (error) {
       console.error('Create incident error:', error);

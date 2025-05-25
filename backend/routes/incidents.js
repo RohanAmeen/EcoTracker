@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Incident = require('../models/Incident');
 const auth = require('../middleware/auth');
+const { upload } = require('../config/cloudinary');
 
 // Debug middleware to log all requests
 router.use((req, res, next) => {
@@ -79,14 +80,36 @@ router.get('/', auth, async (req, res) => {
   }
 });
 
-// Create incident
-router.post('/', auth, async (req, res) => {
+// Create incident with image upload
+router.post('/', auth, upload.array('images', 5), async (req, res) => {
   try {
     console.log('POST /incidents - User:', req.user._id);
     console.log('Request body:', req.body);
+    console.log('Uploaded files:', req.files);
     
+    // Get image URLs from uploaded files
+    const imageUrls = req.files ? req.files.map(file => file.path) : [];
+    
+    // Parse location from string to object
+    let location;
+    try {
+      location = JSON.parse(req.body.location);
+    } catch (error) {
+      console.error('Error parsing location:', error);
+      return res.status(400).json({ 
+        error: 'Invalid location format',
+        details: error.message 
+      });
+    }
+
     const incident = new Incident({
-      ...req.body,
+      title: req.body.title,
+      description: req.body.description,
+      type: req.body.type,
+      severity: req.body.severity,
+      status: req.body.status || 'new',
+      images: imageUrls,
+      location,
       reportedBy: req.user._id
     });
     

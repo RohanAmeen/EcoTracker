@@ -8,24 +8,28 @@ import {
   TouchableOpacity,
   Image,
   Dimensions,
+  Modal,
+  FlatList,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { incidentsAPI } from '../services/api';
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 
 const ReportDetailsScreen = ({ route, navigation }) => {
   const { report } = route.params;
   const [loading, setLoading] = React.useState(false);
+  const [selectedImage, setSelectedImage] = React.useState(null);
+  const [currentImageIndex, setCurrentImageIndex] = React.useState(0);
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'new':
-        return '#ff4444';
       case 'in-progress':
-        return '#ffbb33';
+        return '#FFA000';
+      case 'rejected':
+        return '#D32F2F';
       case 'resolved':
-        return '#00C851';
+        return '#2E7D32';
       default:
         return '#4a5c39';
     }
@@ -61,6 +65,11 @@ const ReportDetailsScreen = ({ route, navigation }) => {
     }
   };
 
+  const handleImagePress = (image, index) => {
+    setSelectedImage(image);
+    setCurrentImageIndex(index);
+  };
+
   const renderImages = () => {
     if (!report.images || report.images.length === 0) {
       return (
@@ -76,14 +85,22 @@ const ReportDetailsScreen = ({ route, navigation }) => {
         horizontal 
         showsHorizontalScrollIndicator={false}
         style={styles.imagesContainer}
+        onMomentumScrollEnd={(event) => {
+          const newIndex = Math.round(event.nativeEvent.contentOffset.x / (width * 0.85));
+          setCurrentImageIndex(newIndex);
+        }}
       >
         {report.images.map((image, index) => (
-          <Image
+          <TouchableOpacity
             key={index}
-            source={{ uri: image }}
-            style={styles.image}
-            resizeMode="cover"
-          />
+            onPress={() => handleImagePress(image, index)}
+          >
+            <Image
+              source={{ uri: image }}
+              style={styles.image}
+              resizeMode="cover"
+            />
+          </TouchableOpacity>
         ))}
       </ScrollView>
     );
@@ -120,9 +137,12 @@ const ReportDetailsScreen = ({ route, navigation }) => {
           onPress={() => navigation.goBack()} 
           style={styles.backButton}
         >
-          <Icon name="arrow-back" size={24} color="white" />
+          <Icon name="arrow-back-ios" size={24} color="#2c3e50" />
         </TouchableOpacity>
-        <Text style={styles.headerText}>Report Details</Text>
+        <View style={styles.headerContent}>
+          <Text style={styles.headerText}>Report Details</Text>
+          <Text style={styles.incidentId}>#{report._id?.slice(-6) || '000000'}</Text>
+        </View>
         <View style={styles.placeholder} />
       </View>
 
@@ -162,7 +182,16 @@ const ReportDetailsScreen = ({ route, navigation }) => {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Images</Text>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Images</Text>
+            {report.images && report.images.length > 0 && (
+              <View style={styles.imageCountBadge}>
+                <Text style={styles.imageCountText}>
+                  {currentImageIndex + 1}/{report.images.length}
+                </Text>
+              </View>
+            )}
+          </View>
           {renderImages()}
         </View>
 
@@ -215,30 +244,80 @@ const ReportDetailsScreen = ({ route, navigation }) => {
             </Text>
           </View>
         </View>
+
+        <View style={styles.buttonRow}>
+          <TouchableOpacity
+            style={[styles.actionButton, { backgroundColor: '#D32F2F' }]}
+            onPress={() => handleStatusChange('rejected')}
+            disabled={loading}
+          >
+            <Text style={styles.buttonText}>Reject</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.actionButton, { backgroundColor: '#FFA000' }]}
+            onPress={() => handleStatusChange('in-progress')}
+            disabled={loading}
+          >
+            <Text style={styles.buttonText}>In Progress</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.actionButton, { backgroundColor: '#2E7D32' }]}
+            onPress={() => handleStatusChange('resolved')}
+            disabled={loading}
+          >
+            <Text style={styles.buttonText}>Resolved</Text>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
-      <View style={styles.buttonRow}>
-        <TouchableOpacity
-          style={[styles.actionButton, { backgroundColor: '#ffbb33' }]}
-          onPress={() => handleStatusChange('in-progress')}
-          disabled={loading}
-        >
-          <Text style={styles.buttonText}>In Progress</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.actionButton, { backgroundColor: '#ff4444' }]}
-          onPress={() => handleStatusChange('rejected')}
-          disabled={loading}
-        >
-          <Text style={styles.buttonText}>Reject</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.actionButton, { backgroundColor: '#00C851' }]}
-          onPress={() => handleStatusChange('resolved')}
-          disabled={loading}
-        >
-          <Text style={styles.buttonText}>Resolved</Text>
-        </TouchableOpacity>
-      </View>
+
+      <Modal
+        visible={!!selectedImage}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setSelectedImage(null)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <View style={styles.imageCounter}>
+              <Text style={styles.imageCounterText}>
+                {currentImageIndex + 1} / {report.images.length}
+              </Text>
+            </View>
+            <TouchableOpacity 
+              style={styles.closeButton}
+              onPress={() => setSelectedImage(null)}
+            >
+              <Icon name="close" size={28} color="#fff" />
+            </TouchableOpacity>
+          </View>
+          
+          <FlatList
+            data={report.images}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            initialScrollIndex={currentImageIndex}
+            getItemLayout={(data, index) => ({
+              length: width,
+              offset: width * index,
+              index,
+            })}
+            onMomentumScrollEnd={(event) => {
+              const newIndex = Math.round(event.nativeEvent.contentOffset.x / width);
+              setCurrentImageIndex(newIndex);
+            }}
+            renderItem={({ item }) => (
+              <View style={styles.fullImageContainer}>
+                <Image
+                  source={{ uri: item }}
+                  style={styles.fullImage}
+                  resizeMode="contain"
+                />
+              </View>
+            )}
+          />
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -249,16 +328,24 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f5f5',
   },
   header: {
-    backgroundColor: '#2c3e50',
     padding: 20,
+    paddingTop: 40,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
   headerText: {
-    color: 'white',
+    color: '#2c3e50',
+    fontSize: 32,
+    fontWeight: '900',
+    letterSpacing: 0.5,
+  },
+  incidentId: {
+    color: '#2c3e50',
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: '700',
+    opacity: 0.7,
+    marginTop: 4,
   },
   backButton: {
     padding: 8,
@@ -334,8 +421,8 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   image: {
-    width: width * 0.7,
-    height: 200,
+    width: width * 0.85,
+    height: 250,
     borderRadius: 8,
     marginRight: 12,
   },
@@ -381,20 +468,85 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 16,
-    backgroundColor: '#f5f5f5',
+    marginBottom: 120,
+    marginHorizontal: 8,
+    gap: 8,
   },
   actionButton: {
     flex: 1,
-    marginHorizontal: 4,
-    paddingVertical: 10,
-    borderRadius: 8,
-    alignItems: 'center',
+    height: 50,
+    justifyContent: 'center',
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 4,
+    transform: [{ scale: 1 }],
   },
   buttonText: {
     color: 'white',
-    fontWeight: 'bold',
+    fontWeight: '600',
+    fontSize: 15,
+    letterSpacing: 0.5,
+    textAlign: 'center',
+  },
+  headerContent: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalHeader: {
+    position: 'absolute',
+    top: 40,
+    right: 20,
+    zIndex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  closeButton: {
+    padding: 10,
+  },
+  imageCounter: {
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  imageCounterText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  fullImageContainer: {
+    width: width,
+    height: height * 0.9,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  fullImage: {
+    width: width,
+    height: height * 0.9,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  imageCountBadge: {
+    paddingHorizontal: 8,
+  },
+  imageCountText: {
+    color: '#4a5c39',
     fontSize: 14,
+    fontWeight: '500',
   },
 });
 

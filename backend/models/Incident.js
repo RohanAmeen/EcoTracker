@@ -31,14 +31,14 @@ const incidentSchema = new mongoose.Schema({
     type: {
       type: String,
       enum: ['Point'],
-      required: true
+      default: 'Point'
     },
     coordinates: {
       type: [Number],
       required: true,
       validate: {
         validator: function(v) {
-          return v.length === 2 && 
+          return v && v.length === 2 && 
                  v[0] >= -180 && v[0] <= 180 && 
                  v[1] >= -90 && v[1] <= 90;
         },

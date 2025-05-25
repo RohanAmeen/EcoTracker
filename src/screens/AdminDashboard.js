@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   Alert,
   TextInput,
+  Platform,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { incidentsAPI } from '../services/api';
@@ -54,12 +55,12 @@ const AdminDashboard = ({ navigation }) => {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'new':
-        return '#ff4444';
       case 'in-progress':
-        return '#ffbb33';
+        return '#FFA000';
+      case 'rejected':
+        return '#D32F2F';
       case 'resolved':
-        return '#00C851';
+        return '#2E7D32';
       default:
         return '#4a5c39';
     }
@@ -116,26 +117,29 @@ const AdminDashboard = ({ navigation }) => {
                 {item.type ? item.type.charAt(0).toUpperCase() + item.type.slice(1) : 'Unknown'}
               </Text>
             </View>
-            <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
-              <Text style={styles.statusText}>
-                {item.status ? item.status.charAt(0).toUpperCase() + item.status.slice(1) : 'Unknown'}
-              </Text>
-            </View>
+            <Text style={styles.reportDate}>
+              {item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'No date'}
+            </Text>
           </View>
-          <Text style={styles.reportDate}>
-            {item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'No date'}
-          </Text>
         </View>
         
         <Text style={styles.reportDescription} numberOfLines={1}>
           {item.description || 'No description provided'}
         </Text>
 
-        <View style={styles.reporterInfo}>
-          <Icon name="person" size={16} color="#666" />
-          <Text style={styles.reporterText}>
-            {item.reportedBy?.username || 'Unknown'}
-          </Text>
+        <View style={styles.reportFooter}>
+          <View style={styles.reporterInfo}>
+            <Icon name="person" size={16} color="#666" />
+            <Text style={styles.reporterText}>
+              {item.reportedBy?.username || 'Unknown'}
+            </Text>
+          </View>
+          <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
+            <Text style={styles.statusText}>
+              {item.status === 'in-progress' ? 'In Progress' : 
+               item.status ? item.status.charAt(0).toUpperCase() + item.status.slice(1) : 'Unknown'}
+            </Text>
+          </View>
         </View>
       </TouchableOpacity>
     );
@@ -158,7 +162,7 @@ const AdminDashboard = ({ navigation }) => {
       <View style={styles.header}>
         <Text style={styles.headerText}>Admin Dashboard</Text>
         <TouchableOpacity onPress={signOut} style={styles.signOutButton}>
-          <Icon name="logout" size={24} color="white" />
+          <Icon name="logout" size={24} color="#2c3e50" />
         </TouchableOpacity>
       </View>
 
@@ -183,15 +187,7 @@ const AdminDashboard = ({ navigation }) => {
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.filterButton, filterStatus === 'new' && styles.filterButtonActive]}
-          onPress={() => setFilterStatus('new')}
-        >
-          <Text style={[styles.filterButtonText, filterStatus === 'new' && styles.filterButtonTextActive]}>
-            New
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.filterButton, filterStatus === 'in-progress' && styles.filterButtonActive]}
+          style={[styles.filterButton, filterStatus === 'in-progress' && { backgroundColor: '#FFA000' }]}
           onPress={() => setFilterStatus('in-progress')}
         >
           <Text style={[styles.filterButtonText, filterStatus === 'in-progress' && styles.filterButtonTextActive]}>
@@ -199,7 +195,7 @@ const AdminDashboard = ({ navigation }) => {
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.filterButton, filterStatus === 'resolved' && styles.filterButtonActive]}
+          style={[styles.filterButton, filterStatus === 'resolved' && { backgroundColor: '#2E7D32' }]}
           onPress={() => setFilterStatus('resolved')}
         >
           <Text style={[styles.filterButtonText, filterStatus === 'resolved' && styles.filterButtonTextActive]}>
@@ -207,7 +203,7 @@ const AdminDashboard = ({ navigation }) => {
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.filterButton, filterStatus === 'rejected' && styles.filterButtonActive]}
+          style={[styles.filterButton, filterStatus === 'rejected' && { backgroundColor: '#D32F2F' }]}
           onPress={() => setFilterStatus('rejected')}
         >
           <Text style={[styles.filterButtonText, filterStatus === 'rejected' && styles.filterButtonTextActive]}>
@@ -241,16 +237,18 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f5f5',
   },
   header: {
-    backgroundColor: '#2c3e50',
     padding: 20,
+    paddingTop: 40,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
   headerText: {
-    color: 'white',
-    fontSize: 24,
+    color: '#2c3e50',
+    fontSize: 32,
     fontWeight: 'bold',
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif-medium',
+    letterSpacing: 0.5,
   },
   signOutButton: {
     padding: 8,
@@ -295,7 +293,7 @@ const styles = StyleSheet.create({
     shadowRadius: 1,
   },
   filterButtonActive: {
-    backgroundColor: '#4a5c39',
+    backgroundColor: '#2c3e50',
   },
   filterButtonText: {
     color: '#666',
@@ -343,17 +341,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#4a5c39',
   },
-  statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    marginLeft: 8,
-  },
-  statusText: {
-    color: 'white',
-    fontSize: 12,
-    fontWeight: '500',
-  },
   reportDate: {
     fontSize: 12,
     color: '#666',
@@ -363,15 +350,36 @@ const styles = StyleSheet.create({
     color: '#333',
     marginBottom: 8,
   },
+  reportFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#f0f0f0',
+  },
   reporterInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 8,
   },
   reporterText: {
     fontSize: 12,
     color: '#666',
     marginLeft: 4,
+  },
+  statusBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+    minWidth: 90,
+    alignItems: 'center',
+  },
+  statusText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '500',
+    textAlign: 'center',
   },
   loadingContainer: {
     flex: 1,
