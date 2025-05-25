@@ -10,25 +10,31 @@ import {
   Alert,
   Platform,
   Dimensions,
+  ActivityIndicator,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView as RNSafeAreaViewContext } from 'react-native-safe-area-context';
 import BottomNav from '../components/BottomNav';
+import { incidentsAPI } from '../services/api';
+import { useAuth } from '../AuthContext';
+import * as Location from 'expo-location';
 
 const { width } = Dimensions.get('window');
 
 const ReportIncident = ({ navigation }) => {
+  const { user } = useAuth();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [type, setType] = useState('');
   const [severity, setSeverity] = useState('');
   const [images, setImages] = useState([]);
   const [locationDetails, setLocationDetails] = useState('');
-  const [reportedBy, setReportedBy] = useState('');
   const [isOtherType, setIsOtherType] = useState(false);
   const [otherTypeValue, setOtherTypeValue] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [coordinates, setCoordinates] = useState(null);
 
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -64,7 +70,27 @@ const ReportIncident = ({ navigation }) => {
     }
   };
 
-  const handleSubmit = () => {
+  const getCurrentLocation = async () => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission Denied', 'Please allow location access to report incidents.');
+        return null;
+      }
+
+      const location = await Location.getCurrentPositionAsync({});
+      return {
+        type: 'Point',
+        coordinates: [location.coords.longitude, location.coords.latitude]
+      };
+    } catch (error) {
+      console.error('Error getting location:', error);
+      Alert.alert('Error', 'Failed to get your location. Please try again.');
+      return null;
+    }
+  };
+
+  const handleSubmit = async () => {
     if (
       !title ||
       !description ||
@@ -76,32 +102,50 @@ const ReportIncident = ({ navigation }) => {
       return;
     }
 
-    const currentDate = new Date().toISOString().split('T')[0];
+    try {
+      setLoading(true);
 
-    const incidentTypeToSubmit = isOtherType ? otherTypeValue.trim() : type;
+      // Get current location
+      const location = await getCurrentLocation();
+      if (!location) {
+        setLoading(false);
+        return;
+      }
 
-    console.log('Submitting incident:', {
-      title,
-      description,
-      type: incidentTypeToSubmit,
-      severity,
-      images,
-      locationDetails,
-      reportedBy: reportedBy || 'Anonymous',
-      date: currentDate,
-      status: 'new',
-    });
+      const incidentData = {
+        title,
+        description,
+        type: isOtherType ? otherTypeValue.trim() : type,
+        severity,
+        images,
+        locationDetails,
+      };
 
-    Alert.alert(
-      'Success',
-      'Incident reported successfully!',
-      [
-        {
-          text: 'OK',
-          onPress: () => navigation.goBack(),
-        },
-      ]
-    );
+      console.log('Submitting incident data:', JSON.stringify(incidentData, null, 2));
+      const response = await incidentsAPI.createIncident(incidentData);
+      console.log('Server response:', JSON.stringify(response, null, 2));
+
+      if (response.error) {
+        Alert.alert('Error', response.error);
+        return;
+      }
+
+      Alert.alert(
+        'Success',
+        'Incident reported successfully!',
+        [
+          {
+            text: 'OK',
+            onPress: () => navigation.goBack(),
+          },
+        ]
+      );
+    } catch (error) {
+      console.error('Error submitting incident:', error);
+      Alert.alert('Error', 'Failed to submit incident. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -251,17 +295,6 @@ const ReportIncident = ({ navigation }) => {
                 numberOfLines={2}
               />
             </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Reported By</Text>
-              <TextInput
-                style={styles.input}
-                value={reportedBy}
-                onChangeText={setReportedBy}
-                placeholder="Your Name (Optional)"
-                placeholderTextColor="#888"
-              />
-            </View>
           </View>
 
           <View style={styles.photosSection}>
@@ -284,8 +317,16 @@ const ReportIncident = ({ navigation }) => {
             </View>
           </View>
 
-          <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-            <Text style={styles.submitButtonText}>Submit Report</Text>
+          <TouchableOpacity 
+            style={[styles.submitButton, loading && styles.submitButtonDisabled]} 
+            onPress={handleSubmit}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.submitButtonText}>Submit Report</Text>
+            )}
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -522,6 +563,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     letterSpacing: 0.5,
+  },
+  submitButtonDisabled: {
+    opacity: 0.7,
   },
 });
 

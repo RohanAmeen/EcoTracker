@@ -71,72 +71,16 @@ export const authAPI = {
 export const incidentsAPI = {
   createIncident: async (incidentData) => {
     try {
-      const token = await getToken();
       const response = await fetch(`${API_URL}/incidents`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify(incidentData),
       });
       return await response.json();
     } catch (error) {
       console.error('Create incident error:', error);
-      throw error;
-    }
-  },
-
-  getIncidents: async () => {
-    try {
-      const response = await fetch(`${API_URL}/incidents`);
-      return await response.json();
-    } catch (error) {
-      console.error('Get incidents error:', error);
-      throw error;
-    }
-  },
-
-  getIncident: async (id) => {
-    try {
-      const response = await fetch(`${API_URL}/incidents/${id}`);
-      return await response.json();
-    } catch (error) {
-      console.error('Get incident error:', error);
-      throw error;
-    }
-  },
-
-  updateIncident: async (id, updateData) => {
-    try {
-      const token = await getToken();
-      const response = await fetch(`${API_URL}/incidents/${id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify(updateData),
-      });
-      return await response.json();
-    } catch (error) {
-      console.error('Update incident error:', error);
-      throw error;
-    }
-  },
-
-  deleteIncident: async (id) => {
-    try {
-      const token = await getToken();
-      const response = await fetch(`${API_URL}/incidents/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      return await response.json();
-    } catch (error) {
-      console.error('Delete incident error:', error);
       throw error;
     }
   },

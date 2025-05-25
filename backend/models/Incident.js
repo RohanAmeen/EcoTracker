@@ -8,55 +8,41 @@ const incidentSchema = new mongoose.Schema({
   },
   description: {
     type: String,
-    required: true
+    required: true,
+    trim: true
   },
-  location: {
-    type: {
-      type: String,
-      enum: ['Point'],
-      default: 'Point'
-    },
-    coordinates: {
-      type: [Number],
-      required: true
-    }
-  },
-  category: {
+  type: {
     type: String,
     required: true,
-    enum: ['pollution', 'deforestation', 'wildlife', 'waste', 'other']
+    trim: true
   },
   severity: {
     type: String,
     required: true,
-    enum: ['low', 'medium', 'high', 'critical']
+    trim: true
   },
-  status: {
+  locationDetails: {
     type: String,
-    required: true,
-    enum: ['reported', 'investigating', 'resolved', 'closed'],
-    default: 'reported'
+    trim: true
   },
   images: [{
-    type: String
+    type: String,
+    trim: true
   }],
-  reportedBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
-  },
   createdAt: {
     type: Date,
     default: Date.now
-  },
-  updatedAt: {
-    type: Date,
-    default: Date.now
   }
+}, {
+  timestamps: true
 });
 
-// Create index for geospatial queries
-incidentSchema.index({ location: '2dsphere' });
+// Add index for better query performance
+incidentSchema.index({ createdAt: -1 });
 
 const Incident = mongoose.model('Incident', incidentSchema);
+
+// Log when the model is created
+console.log('Incident model created');
+
 module.exports = Incident; 
