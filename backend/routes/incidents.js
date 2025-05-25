@@ -1,23 +1,124 @@
 const express = require('express');
 const router = express.Router();
 const Incident = require('../models/Incident');
+const auth = require('../middleware/auth');
+
+// Debug middleware to log all requests
+router.use((req, res, next) => {
+  console.log('Incidents Route:', {
+    method: req.method,
+    path: req.path,
+    headers: req.headers,
+    body: req.body,
+    user: req.user
+  });
+  next();
+});
+
+// Get recent incidents from all users (public endpoint)
+router.get('/recent', async (req, res) => {
+  try {
+    console.log('GET /incidents/recent');
+    
+    const incidents = await Incident.find()
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .select('type createdAt')
+      .lean();
+    
+    console.log(`Found ${incidents.length} recent incidents`);
+    
+    // Format the response
+    const formattedIncidents = incidents.map(incident => ({
+      _id: incident._id,
+      type: incident.type,
+      createdAt: incident.createdAt
+    }));
+    
+    res.json(formattedIncidents);
+  } catch (error) {
+    console.error('Error in GET /incidents/recent:', error);
+    res.status(500).json({ 
+      error: 'Failed to fetch recent incidents',
+      details: error.message 
+    });
+  }
+});
+
+// Get all incidents for the authenticated user
+router.get('/', auth, async (req, res) => {
+  try {
+    console.log('GET /incidents - User:', req.user._id);
+    
+    const incidents = await Incident.find({ reportedBy: req.user._id })
+      .sort({ createdAt: -1 })
+      .lean();
+    
+    console.log(`Found ${incidents.length} incidents`);
+    
+    // Format the response
+    const formattedIncidents = incidents.map(incident => ({
+      _id: incident._id,
+      description: incident.description,
+      type: incident.type,
+      severity: incident.severity,
+      status: incident.status,
+      location: incident.location,
+      images: incident.images,
+      createdAt: incident.createdAt,
+      updatedAt: incident.updatedAt
+    }));
+    
+    res.json(formattedIncidents);
+  } catch (error) {
+    console.error('Error in GET /incidents:', error);
+    res.status(500).json({ 
+      error: 'Failed to fetch incidents',
+      details: error.message 
+    });
+  }
+});
 
 // Create incident
-router.post('/', async (req, res) => {
+router.post('/', auth, async (req, res) => {
   try {
-    console.log('Received incident data:', JSON.stringify(req.body, null, 2));
+    console.log('POST /incidents - User:', req.user._id);
+    console.log('Request body:', req.body);
     
-    const incident = new Incident(req.body);
-    console.log('Created incident object:', JSON.stringify(incident, null, 2));
+    const incident = new Incident({
+      ...req.body,
+      reportedBy: req.user._id
+    });
     
     const savedIncident = await incident.save();
-    console.log('Saved incident:', JSON.stringify(savedIncident, null, 2));
+    console.log('Created incident:', savedIncident._id);
     
     res.status(201).json(savedIncident);
   } catch (error) {
-    console.error('Error creating incident:', error);
-    console.error('Error details:', error.message);
-    res.status(500).json({ error: 'Failed to create incident', details: error.message });
+    console.error('Error in POST /incidents:', error);
+    res.status(500).json({ 
+      error: 'Failed to create incident',
+      details: error.message 
+    });
+  }
+});
+
+// Get incident by ID
+router.get('/:id', auth, async (req, res) => {
+  try {
+    const incident = await Incident.findOne({
+      _id: req.params.id,
+      reportedBy: req.user._id
+    }).lean();
+    
+    if (!incident) {
+      return res.status(404).json({ error: 'Incident not found' });
+    }
+    
+    res.json(incident);
+  } catch (error) {
+    console.error('Error fetching incident:', error);
+    res.status(500).json({ error: 'Failed to fetch incident' });
   }
 });
 

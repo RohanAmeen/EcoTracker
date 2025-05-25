@@ -9,6 +9,10 @@ const userSchema = new mongoose.Schema({
     trim: true,
     minlength: 3
   },
+  name: {
+    type: String,
+    trim: true
+  },
   email: {
     type: String,
     required: true,
@@ -42,7 +46,11 @@ userSchema.pre('save', async function(next) {
 
 // Method to compare passwords
 userSchema.methods.comparePassword = async function(candidatePassword) {
-  return bcrypt.compare(candidatePassword, this.password);
+  try {
+    return await bcrypt.compare(candidatePassword, this.password);
+  } catch (error) {
+    throw error;
+  }
 };
 
 const User = mongoose.model('User', userSchema);

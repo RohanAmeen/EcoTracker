@@ -118,7 +118,8 @@ const ReportIncident = ({ navigation }) => {
         type: isOtherType ? otherTypeValue.trim() : type,
         severity,
         images,
-        locationDetails,
+        location,
+        status: 'new'
       };
 
       console.log('Submitting incident data:', JSON.stringify(incidentData, null, 2));

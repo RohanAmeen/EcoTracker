@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,24 +9,54 @@ import {
   Image,
   Alert,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import * as ImagePicker from 'expo-image-picker';
-import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import BottomNav from '../components/BottomNav';
+import { usersAPI } from '../services/api';
+import { useAuth } from '../AuthContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Profile = ({ navigation }) => {
+  const { user: authUser, signOut, setNavigation } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [profileImage, setProfileImage] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [userData, setUserData] = useState({
-    name: 'John Doe',
-    email: 'john.doe@example.com',
-    phone: '+1 234 567 8900',
-    address: '123 Main Street, City, Country',
-    bio: 'Environmental enthusiast and community activist',
+    name: '',
+    email: '',
+    username: '',
   });
   const [editedData, setEditedData] = useState({ ...userData });
+
+  useEffect(() => {
+    fetchUserProfile();
+    setNavigation(navigation);
+  }, [navigation]);
+
+  const fetchUserProfile = async () => {
+    try {
+      setLoading(true);
+      const data = await usersAPI.getUserProfile();
+      setUserData({
+        name: data.name || data.username,
+        email: data.email,
+        username: data.username,
+      });
+      setEditedData({
+        name: data.name || data.username,
+        email: data.email,
+        username: data.username,
+      });
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+      Alert.alert('Error', 'Failed to fetch profile data');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -53,10 +83,16 @@ const Profile = ({ navigation }) => {
     setEditedData({ ...userData });
   };
 
-  const handleSave = () => {
-    setUserData(editedData);
-    setIsEditing(false);
-    Alert.alert('Success', 'Profile updated successfully!');
+  const handleSave = async () => {
+    try {
+      const updatedUser = await usersAPI.updateProfile(editedData);
+      setUserData(updatedUser);
+      setIsEditing(false);
+      Alert.alert('Success', 'Profile updated successfully!');
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      Alert.alert('Error', 'Failed to update profile. Please try again.');
+    }
   };
 
   const handleCancel = () => {
@@ -80,10 +116,39 @@ const Profile = ({ navigation }) => {
         {
           text: 'Delete',
           style: 'destructive',
-          onPress: () => {
-            // Add account deletion logic here
-            Alert.alert('Account Deleted', 'Your account has been deleted successfully.');
-            navigation.navigate('Login');
+          onPress: async () => {
+            try {
+              setLoading(true);
+              
+              // Delete account
+              await usersAPI.deleteAccount();
+              
+              // Show success message
+              Alert.alert(
+                'Success',
+                'Your account has been deleted successfully.',
+                [
+                  {
+                    text: 'OK',
+                    onPress: async () => {
+                      // Let signOut handle the navigation
+                      await signOut();
+                    },
+                  },
+                ],
+                { cancelable: false }
+              );
+            } catch (error) {
+              console.error('Error deleting account:', error);
+              Alert.alert(
+                'Error',
+                error.message === 'No authentication token found'
+                  ? 'Please log in again to delete your account.'
+                  : 'Failed to delete account. Please try again.'
+              );
+            } finally {
+              setLoading(false);
+            }
           },
         },
       ]
@@ -104,53 +169,60 @@ const Profile = ({ navigation }) => {
     </View>
   );
 
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.safeArea} edges={["top", "left", "right", "bottom"]}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#4a5c39" />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "left", "right", "bottom"]}>
-      <LinearGradient
-        colors={["#2A7B9B", "#57C785", "#2A7B9B"]}
-        style={styles.gradientHeader}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-      >
-        <View style={styles.headerContent}>
-          <Text style={styles.headerTitle}>Profile</Text>
-        </View>
-      </LinearGradient>
-
       <ScrollView style={styles.scrollViewContent} showsVerticalScrollIndicator={false}>
         <View style={styles.profileContainer}>
-          <TouchableOpacity style={styles.profileImageContainer} onPress={pickImage}>
-            {profileImage ? (
-              <Image source={{ uri: profileImage }} style={styles.profileImage} />
-            ) : (
-              <View style={styles.profileImagePlaceholder}>
-                <Icon name="person" size={50} color="#4a5c39" />
+          <View style={styles.profileHeader}>
+            <TouchableOpacity style={styles.profileImageContainer} onPress={pickImage}>
+              {profileImage ? (
+                <Image source={{ uri: profileImage }} style={styles.profileImage} />
+              ) : (
+                <View style={styles.profileImagePlaceholder}>
+                  <Icon name="person" size={50} color="#4a5c39" />
+                </View>
+              )}
+              <View style={styles.editImageButton}>
+                <Icon name="edit" size={20} color="#fff" />
               </View>
-            )}
-            <View style={styles.editImageButton}>
-              <Icon name="edit" size={20} color="#fff" />
-            </View>
-          </TouchableOpacity>
+            </TouchableOpacity>
+            <Text style={styles.name}>{userData.name}</Text>
+            <Text style={styles.username}>@{userData.username}</Text>
+          </View>
 
           {isEditing ? (
             <View style={styles.editModeContainer}>
               <View style={styles.editFieldsContainer}>
                 {renderEditableField('Name', 'name', 'Enter your name')}
                 {renderEditableField('Email', 'email', 'Enter your email')}
-                {renderEditableField('Phone', 'phone', 'Enter your phone number')}
-                {renderEditableField('Address', 'address', 'Enter your address')}
-                {renderEditableField('Bio', 'bio', 'Tell us about yourself')}
+                {renderEditableField('Username', 'username', 'Enter your username')}
               </View>
 
               <View style={styles.editActionsContainer}>
                 <TouchableOpacity style={styles.actionButton} onPress={handleChangePassword}>
-                  <Icon name="lock" size={24} color="#4a5c39" />
-                  <Text style={styles.actionButtonText}>Change Password</Text>
+                  <View style={styles.actionButtonContent}>
+                    <Icon name="lock" size={24} color="#4a5c39" />
+                    <Text style={styles.actionButtonText}>Change Password</Text>
+                  </View>
+                  <Icon name="chevron-right" size={24} color="#4a5c39" />
                 </TouchableOpacity>
 
                 <TouchableOpacity style={[styles.actionButton, styles.deleteButton]} onPress={handleDeleteAccount}>
-                  <Icon name="delete" size={24} color="#ff4444" />
-                  <Text style={[styles.actionButtonText, styles.deleteButtonText]}>Delete Account</Text>
+                  <View style={styles.actionButtonContent}>
+                    <Icon name="delete" size={24} color="#ff4444" />
+                    <Text style={[styles.actionButtonText, styles.deleteButtonText]}>Delete Account</Text>
+                  </View>
+                  <Icon name="chevron-right" size={24} color="#ff4444" />
                 </TouchableOpacity>
 
                 <View style={styles.editButtonsContainer}>
@@ -166,22 +238,28 @@ const Profile = ({ navigation }) => {
           ) : (
             <>
               <View style={styles.infoContainer}>
-                <Text style={styles.name}>{userData.name}</Text>
-                <Text style={styles.bio}>{userData.bio}</Text>
-                
-                <View style={styles.infoRow}>
-                  <Icon name="email" size={20} color="#4a5c39" />
-                  <Text style={styles.infoText}>{userData.email}</Text>
-                </View>
-                
-                <View style={styles.infoRow}>
-                  <Icon name="phone" size={20} color="#4a5c39" />
-                  <Text style={styles.infoText}>{userData.phone}</Text>
-                </View>
-                
-                <View style={styles.infoRow}>
-                  <Icon name="location-on" size={20} color="#4a5c39" />
-                  <Text style={styles.infoText}>{userData.address}</Text>
+                <View style={styles.infoCard}>
+                  <View style={styles.infoRow}>
+                    <View style={styles.infoIconContainer}>
+                      <Icon name="email" size={20} color="#4a5c39" />
+                    </View>
+                    <View style={styles.infoTextContainer}>
+                      <Text style={styles.infoLabel}>Email</Text>
+                      <Text style={styles.infoText}>{userData.email}</Text>
+                    </View>
+                  </View>
+                  
+                  <View style={styles.infoDivider} />
+                  
+                  <View style={styles.infoRow}>
+                    <View style={styles.infoIconContainer}>
+                      <Icon name="person" size={20} color="#4a5c39" />
+                    </View>
+                    <View style={styles.infoTextContainer}>
+                      <Text style={styles.infoLabel}>Username</Text>
+                      <Text style={styles.infoText}>{userData.username}</Text>
+                    </View>
+                  </View>
                 </View>
               </View>
 
@@ -201,37 +279,34 @@ const Profile = ({ navigation }) => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#f6f8f3',
+    backgroundColor: '#f0ede3',
   },
-  gradientHeader: {
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-  },
-  headerContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  loadingContainer: {
+    flex: 1,
     justifyContent: 'center',
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#fff',
+    alignItems: 'center',
   },
   scrollViewContent: {
     flex: 1,
   },
   profileContainer: {
     padding: 16,
+  },
+  profileHeader: {
     alignItems: 'center',
+    marginBottom: 32,
+    marginTop: 16,
   },
   profileImageContainer: {
     position: 'relative',
-    marginBottom: 24,
+    marginBottom: 16,
   },
   profileImage: {
     width: 120,
     height: 120,
     borderRadius: 60,
+    borderWidth: 3,
+    borderColor: '#4a5c39',
   },
   profileImagePlaceholder: {
     width: 120,
@@ -240,6 +315,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#e0e4da',
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 3,
+    borderColor: '#4a5c39',
   },
   editImageButton: {
     position: 'absolute',
@@ -251,35 +328,68 @@ const styles = StyleSheet.create({
     height: 40,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  infoContainer: {
-    width: '100%',
-    marginBottom: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   name: {
     fontSize: 24,
     fontWeight: 'bold',
     color: '#2d3a22',
-    textAlign: 'center',
+    marginBottom: 4,
+  },
+  username: {
+    fontSize: 16,
+    color: '#6b7a5e',
     marginBottom: 8,
   },
-  bio: {
-    fontSize: 16,
-    color: '#4a5c39',
-    textAlign: 'center',
+  infoContainer: {
+    width: '100%',
     marginBottom: 24,
+  },
+  infoCard: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
-    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  infoIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#f6f8f3',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  infoTextContainer: {
+    flex: 1,
+  },
+  infoLabel: {
+    fontSize: 14,
+    color: '#6b7a5e',
+    marginBottom: 4,
   },
   infoText: {
     fontSize: 16,
-    color: '#4a5c39',
-    marginLeft: 12,
-    flex: 1,
+    color: '#2d3a22',
+    fontWeight: '500',
+  },
+  infoDivider: {
+    height: 1,
+    backgroundColor: '#e0e4da',
+    marginVertical: 8,
   },
   inputGroup: {
     width: '100%',
@@ -305,8 +415,6 @@ const styles = StyleSheet.create({
   },
   editModeContainer: {
     width: '100%',
-    flex: 1,
-    justifyContent: 'space-between',
   },
   editFieldsContainer: {
     width: '100%',
@@ -315,6 +423,29 @@ const styles = StyleSheet.create({
   editActionsContainer: {
     width: '100%',
     gap: 16,
+  },
+  actionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  actionButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  actionButtonText: {
+    fontSize: 16,
+    color: '#4a5c39',
+    fontWeight: '500',
   },
   editButtonsContainer: {
     flexDirection: 'row',
@@ -331,6 +462,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     marginBottom: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   saveButton: {
     backgroundColor: '#4a5c39',
@@ -347,28 +483,6 @@ const styles = StyleSheet.create({
   },
   cancelButtonText: {
     color: '#4a5c39',
-  },
-  actionButtonsContainer: {
-    width: '100%',
-    gap: 12,
-  },
-  actionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    gap: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  actionButtonText: {
-    fontSize: 16,
-    color: '#4a5c39',
-    fontWeight: '500',
   },
   deleteButton: {
     borderWidth: 1,

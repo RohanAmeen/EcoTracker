@@ -44,7 +44,8 @@ export const AuthProvider = ({ children }) => {
   const signOut = async () => {
     try {
       // Clear auth data from storage
-      await authAPI.logout();
+      await AsyncStorage.removeItem('token');
+      await AsyncStorage.removeItem('user');
       
       // Reset auth state
       setIsLoggedIn(false);

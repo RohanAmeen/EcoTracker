@@ -12,6 +12,7 @@ import {
   TextInput,
   FlatList,
   SafeAreaView as RNSafeAreaView,
+  ActivityIndicator,
 } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import Icon from 'react-native-vector-icons/MaterialIcons';
@@ -22,6 +23,8 @@ import { Image } from 'react-native';
 import { SafeAreaView as RNSafeAreaViewContext } from 'react-native-safe-area-context';
 import BottomNav from '../components/BottomNav';
 import { CommonActions } from '@react-navigation/native';
+import { incidentsAPI, usersAPI } from '../services/api';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 const HomeScreen = ({ navigation }) => {
   const { isLoggedIn, signOut, setNavigation } = useAuth();
@@ -36,6 +39,10 @@ const HomeScreen = ({ navigation }) => {
   const [isViewReportsPressed, setIsViewReportsPressed] = useState(false);
   const [isMenuVisible, setIsMenuVisible] = useState(false);
   const [isMenuClosing, setIsMenuClosing] = useState(false);
+  const [recentIncidents, setRecentIncidents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [leaderboardData, setLeaderboardData] = useState([]);
+  const [loadingLeaderboard, setLoadingLeaderboard] = useState(true);
 
   useEffect(() => {
     setNavigation(navigation);
@@ -70,6 +77,37 @@ const HomeScreen = ({ navigation }) => {
       );
     }
   }, [isLoggedIn]);
+
+  useEffect(() => {
+    fetchRecentIncidents();
+    fetchLeaderboard();
+  }, []);
+
+  const fetchRecentIncidents = async () => {
+    try {
+      setLoading(true);
+      const incidents = await incidentsAPI.getRecentIncidents();
+      setRecentIncidents(incidents);
+    } catch (error) {
+      console.error('Error fetching recent incidents:', error);
+      Alert.alert('Error', 'Failed to fetch recent incidents');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchLeaderboard = async () => {
+    try {
+      setLoadingLeaderboard(true);
+      const data = await usersAPI.getLeaderboard();
+      setLeaderboardData(data);
+    } catch (error) {
+      console.error('Error fetching leaderboard:', error);
+      Alert.alert('Error', 'Failed to fetch leaderboard data');
+    } finally {
+      setLoadingLeaderboard(false);
+    }
+  };
 
   if (!isLoggedIn) {
     return null; // Don't render anything if not logged in
@@ -231,27 +269,6 @@ const HomeScreen = ({ navigation }) => {
     }
   ];
 
-  // Dummy data for recent incidents
-  const recentIncidents = [
-    { id: '1', title: 'Illegal Dumping', time: '2h ago', type: 'trash' },
-    { id: '2', title: 'Air Pollution', time: '5h ago', type: 'air' },
-    { id: '3', title: 'Water Contamination', time: '1d ago', type: 'water' },
-  ];
-
-  // Add dummy leaderboard data
-  const leaderboardData = [
-    { id: '1', name: 'Alice', points: 1200 },
-    { id: '2', name: 'Bob', points: 1100 },
-    { id: '3', name: 'Charlie', points: 1050 },
-    { id: '4', name: 'Diana', points: 950 },
-    { id: '5', name: 'Ethan', points: 900 },
-    { id: '6', name: 'Fiona', points: 850 },
-    { id: '7', name: 'George', points: 800 },
-    { id: '8', name: 'Hannah', points: 780 },
-    { id: '9', name: 'Ivan', points: 760 },
-    { id: '10', name: 'Julia', points: 750 },
-  ];
-
   const handleMarkerPress = (marker) => {
     navigation.navigate('IncidentDetails', { incident: marker });
   };
@@ -288,6 +305,37 @@ const HomeScreen = ({ navigation }) => {
   const handleSignOut = () => {
     handleMenuClose();
     signOut();
+  };
+
+  const getTypeIcon = (type) => {
+    switch (type.toLowerCase()) {
+      case 'trash': return 'delete';
+      case 'air': return 'air';
+      case 'water': return 'water-drop';
+      case 'noise': return 'volume-up';
+      default: return 'warning';
+    }
+  };
+
+  const getTypeColor = (type) => {
+    switch (type.toLowerCase()) {
+      case 'trash': return '#4a5c39';  // Login screen green
+      case 'air': return '#4a5c39';    // Login screen green
+      case 'water': return '#4a5c39';  // Login screen green
+      case 'noise': return '#4a5c39';  // Login screen green
+      default: return '#4a5c39';       // Login screen green
+    }
+  };
+
+  const formatTime = (timestamp) => {
+    const date = new Date(timestamp);
+    return date.toLocaleString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: 'numeric',
+      hour12: true
+    });
   };
 
   return (
@@ -481,47 +529,83 @@ const HomeScreen = ({ navigation }) => {
           </TouchableOpacity>
         </View>
         {/* Recent Incidents */}
-        <View style={styles.recentIncidentsSection}>
-          <Text style={styles.sectionTitle}>Recent Incidents</Text>
-          <FlatList
-            data={recentIncidents}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <View style={styles.incidentItem}>
-                <Icon name="delete" size={20} color="#8ca982" style={{ marginRight: 8 }} />
-                <Text style={styles.incidentTitle}>{item.title}</Text>
-                <Text style={styles.incidentTime}>{item.time}</Text>
-              </View>
-            )}
-            ItemSeparatorComponent={() => <View style={styles.incidentSeparator} />}
-          />
+        <View style={styles.recentIncidentsContainer}>
+          <View style={styles.recentIncidentsHeader}>
+            <View style={styles.recentIncidentsTitleContainer}>
+              <Icon name="schedule" size={24} color="#4a5c39" />
+              <Text style={styles.recentIncidentsTitle}>Recent Incidents</Text>
+            </View>
+            <TouchableOpacity 
+              style={styles.refreshButton}
+              onPress={fetchRecentIncidents}
+            >
+              <Icon name="refresh" size={24} color="#4a5c39" />
+            </TouchableOpacity>
+          </View>
+          
+          {loading ? (
+            <View style={styles.loaderContainer}>
+              <ActivityIndicator size="small" color="#4a5c39" />
+            </View>
+          ) : (
+            <View style={styles.recentIncidentsList}>
+              {recentIncidents.slice(0, 3).map((item) => (
+                <View key={item._id} style={styles.incidentCard}>
+                  <View style={styles.incidentCardHeader}>
+                    <View style={styles.incidentTypeContainer}>
+                      <Icon 
+                        name={getTypeIcon(item.type)} 
+                        size={24} 
+                        color={getTypeColor(item.type)} 
+                      />
+                      <Text style={[styles.incidentType, { color: getTypeColor(item.type) }]}>
+                        {item.type.charAt(0).toUpperCase() + item.type.slice(1)}
+                      </Text>
+                    </View>
+                    <Text style={styles.incidentTime}>
+                      {formatTime(item.createdAt)}
+                    </Text>
+                  </View>
+                  <View style={[styles.incidentCardDivider, { backgroundColor: getTypeColor(item.type) + '20' }]} />
+                </View>
+              ))}
+            </View>
+          )}
         </View>
         {/* Leaderboard */}
         <View style={styles.leaderboardSection}>
           <View style={styles.sectionTitleContainer}>
-            <Icon name="emoji-events" size={24} color="#b39b7a" style={styles.sectionIcon} />
+            <Icon name="emoji-events" size={24} color="#4a5c39" style={styles.sectionIcon} />
             <Text style={styles.sectionTitle}>Leaderboard</Text>
           </View>
-          <ScrollView 
-            style={styles.leaderboardScrollView}
-            showsVerticalScrollIndicator={false}
-          >
-            {leaderboardData.map((user, idx) => (
-              <View
-                key={user.id}
-                style={[
-                  styles.leaderboardItem,
-                  idx === 0 && styles.goldRank,
-                  idx === 1 && styles.silverRank,
-                  idx === 2 && styles.bronzeRank,
-                ]}
-              >
-                <Text style={styles.leaderboardRankText}>{idx + 1}</Text>
-                <Text style={styles.leaderboardName}>{user.name}</Text>
-                <Text style={styles.leaderboardPoints}>{user.points} pts</Text>
-              </View>
-            ))}
-          </ScrollView>
+          {loadingLeaderboard ? (
+            <View style={styles.loaderContainer}>
+              <ActivityIndicator size="small" color="#4a5c39" />
+            </View>
+          ) : (
+            <ScrollView 
+              style={styles.leaderboardScrollView}
+              contentContainerStyle={styles.leaderboardContent}
+              showsVerticalScrollIndicator={false}
+              nestedScrollEnabled={true}
+            >
+              {leaderboardData.map((user, idx) => (
+                <View
+                  key={user._id}
+                  style={[
+                    styles.leaderboardItem,
+                    idx === 0 && styles.goldRank,
+                    idx === 1 && styles.silverRank,
+                    idx === 2 && styles.bronzeRank,
+                  ]}
+                >
+                  <Text style={styles.leaderboardRankText}>{idx + 1}</Text>
+                  <Text style={styles.leaderboardName}>{user.name}</Text>
+                  <Text style={styles.leaderboardPoints}>{user.reportCount} reports</Text>
+                </View>
+              ))}
+            </ScrollView>
+          )}
         </View>
       </ScrollView>
       <BottomNav navigation={navigation} currentScreen="Home" />
@@ -694,17 +778,76 @@ const styles = StyleSheet.create({
     elevation: 3,
     overflow: 'hidden',
   },
-  recentIncidentsSection: {
+  recentIncidentsContainer: {
     backgroundColor: '#fff',
-    marginHorizontal: 16,
-    marginBottom: 16,
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 16,
+    marginHorizontal: 16,
+  
+    marginBottom: 28,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+  },
+  recentIncidentsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  recentIncidentsTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  recentIncidentsTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#4a5c39',
+  },
+  refreshButton: {
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: '#f6f8f3',
+  },
+  recentIncidentsList: {
+    gap: 12,
+  },
+  incidentCard: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#E8F4F8',
+  },
+  incidentCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  incidentTypeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  incidentType: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  incidentTime: {
+    fontSize: 14,
+    color: '#666666',
+    fontWeight: '500',
+  },
+  incidentCardDivider: {
+    height: 1,
+    marginTop: 12,
+  },
+  loaderContainer: {
+    padding: 20,
+    alignItems: 'center',
   },
   leaderboardSection: {
     backgroundColor: '#fff',
@@ -717,9 +860,15 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
-    maxHeight: 300,
+    height: 300, // Fixed height for the container
   },
   leaderboardScrollView: {
+    flex: 1,
+  },
+  leaderboardContent: {
+    paddingBottom: 8,
+  },
+  leaderboardList: {
     maxHeight: 215,
   },
   sectionTitleContainer: {
@@ -729,30 +878,6 @@ const styles = StyleSheet.create({
   },
   sectionIcon: {
     marginRight: 8,
-  },
-  sectionTitle: {
-    fontWeight: 'bold',
-    fontSize: 18,
-    color: '#2d3a22',
-  },
-  incidentItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 10,
-  },
-  incidentTitle: {
-    flex: 1,
-    color: '#333',
-    fontSize: 15,
-  },
-  incidentTime: {
-    color: '#888',
-    fontSize: 13,
-  },
-  incidentSeparator: {
-    height: 1,
-    backgroundColor: '#f0f0f0',
-    marginVertical: 4,
   },
   leaderboardItem: {
     flexDirection: 'row',

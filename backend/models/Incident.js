@@ -21,14 +21,40 @@ const incidentSchema = new mongoose.Schema({
     required: true,
     trim: true
   },
-  locationDetails: {
+  status: {
     type: String,
-    trim: true
+    required: true,
+    enum: ['new', 'in-progress', 'resolved'],
+    default: 'new'
+  },
+  location: {
+    type: {
+      type: String,
+      enum: ['Point'],
+      required: true
+    },
+    coordinates: {
+      type: [Number],
+      required: true,
+      validate: {
+        validator: function(v) {
+          return v.length === 2 && 
+                 v[0] >= -180 && v[0] <= 180 && 
+                 v[1] >= -90 && v[1] <= 90;
+        },
+        message: 'Coordinates must be [longitude, latitude]'
+      }
+    }
   },
   images: [{
     type: String,
     trim: true
   }],
+  reportedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
   createdAt: {
     type: Date,
     default: Date.now
@@ -37,8 +63,10 @@ const incidentSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Add index for better query performance
+// Add indexes for better query performance
 incidentSchema.index({ createdAt: -1 });
+incidentSchema.index({ reportedBy: 1 });
+incidentSchema.index({ location: '2dsphere' });
 
 const Incident = mongoose.model('Incident', incidentSchema);
 
