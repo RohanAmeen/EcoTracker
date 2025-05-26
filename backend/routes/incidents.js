@@ -24,7 +24,7 @@ router.get('/recent', async (req, res) => {
     const incidents = await Incident.find()
       .sort({ createdAt: -1 })
       .limit(5)
-      .select('type createdAt')
+      .select('type createdAt location title description')
       .lean();
     
     console.log(`Found ${incidents.length} recent incidents`);
@@ -33,6 +33,9 @@ router.get('/recent', async (req, res) => {
     const formattedIncidents = incidents.map(incident => ({
       _id: incident._id,
       type: incident.type,
+      title: incident.title,
+      description: incident.description,
+      location: incident.location,
       createdAt: incident.createdAt
     }));
     

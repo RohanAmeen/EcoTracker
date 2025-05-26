@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View,
   StyleSheet,
@@ -13,20 +13,20 @@ import {
   FlatList,
   SafeAreaView as RNSafeAreaView,
   ActivityIndicator,
+  Image,
 } from 'react-native';
-import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
+import MapView, { Marker, PROVIDER_GOOGLE, Callout } from 'react-native-maps';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import * as Location from 'expo-location';
 import { useAuth } from '../AuthContext';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Image } from 'react-native';
 import { SafeAreaView as RNSafeAreaViewContext } from 'react-native-safe-area-context';
 import BottomNav from '../components/BottomNav';
-import { CommonActions } from '@react-navigation/native';
+import { CommonActions, useFocusEffect } from '@react-navigation/native';
 import { incidentsAPI, usersAPI } from '../services/api';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
-const HomeScreen = ({ navigation }) => {
+const HomeScreenContent = ({ navigation }) => {
   const { isLoggedIn, signOut, setNavigation } = useAuth();
   const [region, setRegion] = useState({
     latitude: 30.3753,  // Center of Pakistan
@@ -34,7 +34,6 @@ const HomeScreen = ({ navigation }) => {
     latitudeDelta: 8,   // Closer zoom level to show Pakistan
     longitudeDelta: 8,  // Closer zoom level to show Pakistan
   });
-  const [search, setSearch] = useState('');
   const [isReportPressed, setIsReportPressed] = useState(false);
   const [isViewReportsPressed, setIsViewReportsPressed] = useState(false);
   const [isMenuVisible, setIsMenuVisible] = useState(false);
@@ -43,9 +42,21 @@ const HomeScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
   const [leaderboardData, setLeaderboardData] = useState([]);
   const [loadingLeaderboard, setLoadingLeaderboard] = useState(true);
+  const mapRef = useRef(null);
+  const scrollViewRef = useRef(null);
+  const [isZoomedIn, setIsZoomedIn] = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!isLoggedIn) {
+        return;
+      }
+      fetchRecentIncidents();
+      fetchLeaderboard();
+    }, [isLoggedIn])
+  );
 
   useEffect(() => {
-    setNavigation(navigation);
     (async () => {
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
@@ -66,31 +77,25 @@ const HomeScreen = ({ navigation }) => {
     })();
   }, []);
 
-  useEffect(() => {
-    if (!isLoggedIn) {
-      // If user is not logged in, redirect to login
-      navigation.dispatch(
-        CommonActions.reset({
-          index: 0,
-          routes: [{ name: 'Login' }],
-        })
-      );
-    }
-  }, [isLoggedIn]);
-
-  useEffect(() => {
-    fetchRecentIncidents();
-    fetchLeaderboard();
-  }, []);
-
   const fetchRecentIncidents = async () => {
     try {
       setLoading(true);
-      const incidents = await incidentsAPI.getRecentIncidents();
-      setRecentIncidents(incidents);
+      const response = await incidentsAPI.getRecentIncidents();
+      if (response.error) {
+        console.error('Error fetching incidents:', response.error);
+        return;
+      }
+
+      const validIncidents = response.filter(incident => {
+        return incident.location && 
+               incident.location.coordinates && 
+               Array.isArray(incident.location.coordinates) && 
+               incident.location.coordinates.length === 2;
+      });
+
+      setRecentIncidents(validIncidents);
     } catch (error) {
-      console.error('Error fetching recent incidents:', error);
-      Alert.alert('Error', 'Failed to fetch recent incidents');
+      console.error('Error fetching incidents:', error);
     } finally {
       setLoading(false);
     }
@@ -113,164 +118,27 @@ const HomeScreen = ({ navigation }) => {
     return null; // Don't render anything if not logged in
   }
 
-  // Dummy data for markers
-  const markers = [
-    {
-      id: 1,
-      coordinate: {
-        latitude: 24.8607,
-        longitude: 67.0011,
-      },
-      title: 'Illegal Dumping',
-      description: 'Large pile of construction waste',
-      type: 'trash',
-      severity: 'high',
-      status: 'new',
-      date: '2024-03-27',
-      reportedBy: 'Anonymous',
-      images: [
-        'https://via.placeholder.com/300/b7c9a8/000000?text=Dumping+Photo+1',
-        'https://via.placeholder.com/300/8ca982/ffffff?text=Dumping+Photo+2',
-      ],
-      locationDetails: 'Near Clifton Beach, Karachi',
-      updates: [
-        { id: 1, text: 'Report received and under review.', date: '2024-03-27', status: 'new' },
-        { id: 2, text: 'Cleanup scheduled for next week.', date: '2024-03-30', status: 'in-progress' },
-      ],
-    },
-    {
-      id: 2,
-      coordinate: {
-        latitude: 31.5204,
-        longitude: 74.3587,
-      },
-      title: 'Air Pollution',
-      description: 'Strong odor from nearby factory',
-      type: 'air',
-      severity: 'medium',
-      status: 'in-progress',
-      date: '2024-03-26',
-      reportedBy: 'Ali',
-      images: [
-        'https://via.placeholder.com/300/8ca982/ffffff?text=Air+Photo+1',
-      ],
-      locationDetails: 'Industrial Area, Lahore',
-      updates: [
-        { id: 1, text: 'Investigation started.', date: '2024-03-26', status: 'in-progress' },
-      ],
-    },
-    {
-      id: 3,
-      coordinate: {
-        latitude: 33.6844,
-        longitude: 73.0479,
-      },
-      title: 'Water Contamination',
-      description: 'Unusual color in the river',
-      type: 'water',
-      severity: 'high',
-      status: 'new',
-      date: '2024-03-25',
-      reportedBy: 'Ahmed',
-      images: [
-        'https://via.placeholder.com/300/b7c9a8/000000?text=Water+Photo+1',
-        'https://via.placeholder.com/300/8ca982/ffffff?text=Water+Photo+2',
-        'https://via.placeholder.com/300/b7c9a8/000000?text=Water+Photo+3',
-      ],
-      locationDetails: 'Rawal Lake, Islamabad',
-      updates: [
-        { id: 1, text: 'Sample collected for testing.', date: '2024-03-25', status: 'new' },
-      ],
-    },
-    {
-      id: 4,
-      coordinate: {
-        latitude: 25.3792,
-        longitude: 68.3667,
-      },
-      title: 'Industrial Waste',
-      description: 'Chemical waste being dumped into water body',
-      type: 'water',
-      severity: 'high',
-      status: 'new',
-      date: '2024-03-28',
-      reportedBy: 'Sara',
-      images: [
-        'https://via.placeholder.com/300/b7c9a8/000000?text=Waste+Photo+1',
-      ],
-      locationDetails: 'Hyderabad Industrial Zone',
-      updates: [
-        { id: 1, text: 'Emergency response team dispatched.', date: '2024-03-28', status: 'new' },
-      ],
-    },
-    {
-      id: 5,
-      coordinate: {
-        latitude: 34.0150,
-        longitude: 71.5805,
-      },
-      title: 'Air Quality Alert',
-      description: 'Severe smog conditions in the area',
-      type: 'air',
-      severity: 'high',
-      status: 'in-progress',
-      date: '2024-03-27',
-      reportedBy: 'Khan',
-      images: [
-        'https://via.placeholder.com/300/8ca982/ffffff?text=Smog+Photo+1',
-        'https://via.placeholder.com/300/b7c9a8/000000?text=Smog+Photo+2',
-      ],
-      locationDetails: 'Peshawar City Center',
-      updates: [
-        { id: 1, text: 'Air quality monitoring in progress.', date: '2024-03-27', status: 'in-progress' },
-      ],
-    },
-    {
-      id: 6,
-      coordinate: {
-        latitude: 30.1979,
-        longitude: 71.4697,
-      },
-      title: 'Plastic Pollution',
-      description: 'Massive plastic waste accumulation',
-      type: 'trash',
-      severity: 'medium',
-      status: 'new',
-      date: '2024-03-29',
-      reportedBy: 'Fatima',
-      images: [
-        'https://via.placeholder.com/300/b7c9a8/000000?text=Plastic+Photo+1',
-      ],
-      locationDetails: 'Multan City Park',
-      updates: [
-        { id: 1, text: 'Cleanup drive being organized.', date: '2024-03-29', status: 'new' },
-      ],
-    },
-    {
-      id: 7,
-      coordinate: {
-        latitude: 27.7000,
-        longitude: 68.8667,
-      },
-      title: 'Noise Pollution',
-      description: 'Excessive noise from construction site',
-      type: 'noise',
-      severity: 'medium',
-      status: 'in-progress',
-      date: '2024-03-28',
-      reportedBy: 'Usman',
-      images: [
-        'https://via.placeholder.com/300/8ca982/ffffff?text=Noise+Photo+1',
-      ],
-      locationDetails: 'Larkana Residential Area',
-      updates: [
-        { id: 1, text: 'Authorities notified.', date: '2024-03-28', status: 'in-progress' },
-      ],
+  const getTypeIcon = (type) => {
+    switch (type?.toLowerCase()) {
+      case 'trash':
+        return 'delete';
+      case 'air':
+        return 'air';
+      case 'water':
+        return 'water-drop';
+      case 'noise':
+        return 'volume-up';
+      default:
+        return 'warning';
     }
-  ];
+  };
 
-  const handleMarkerPress = (marker) => {
-    navigation.navigate('IncidentDetails', { incident: marker });
+  const getTypeColor = (type) => {
+    return '#4a5c39';  // Always return logo color
+  };
+
+  const handleMarkerPress = (incident) => {
+    navigation.navigate('IncidentDetails', { incident });
   };
 
   const handleQuickReport = () => {
@@ -307,26 +175,6 @@ const HomeScreen = ({ navigation }) => {
     signOut();
   };
 
-  const getTypeIcon = (type) => {
-    switch (type.toLowerCase()) {
-      case 'trash': return 'delete';
-      case 'air': return 'air';
-      case 'water': return 'water-drop';
-      case 'noise': return 'volume-up';
-      default: return 'warning';
-    }
-  };
-
-  const getTypeColor = (type) => {
-    switch (type.toLowerCase()) {
-      case 'trash': return '#4a5c39';  // Login screen green
-      case 'air': return '#4a5c39';    // Login screen green
-      case 'water': return '#4a5c39';  // Login screen green
-      case 'noise': return '#4a5c39';  // Login screen green
-      default: return '#4a5c39';       // Login screen green
-    }
-  };
-
   const formatTime = (timestamp) => {
     const date = new Date(timestamp);
     return date.toLocaleString('en-US', {
@@ -336,6 +184,50 @@ const HomeScreen = ({ navigation }) => {
       minute: 'numeric',
       hour12: true
     });
+  };
+
+  const renderIncidentMarker = (incident) => {
+    const iconName = getTypeIcon(incident.type);
+    return (
+      <View style={styles.markerContainer}>
+        <Icon name={iconName} size={24} color="#fff" />
+      </View>
+    );
+  };
+
+  const handleMapPress = () => {
+    // Scroll to map section
+    if (scrollViewRef.current) {
+      scrollViewRef.current.scrollTo({ y: 0, animated: true });
+    }
+    
+    // Toggle between zoomed in and zoomed out states
+    if (mapRef.current) {
+      const newZoomLevel = !isZoomedIn;
+      setIsZoomedIn(newZoomLevel);
+      
+      if (Platform.OS === 'android') {
+        // Use animateCamera for Android
+        mapRef.current.animateCamera({
+          center: {
+            latitude: region.latitude,
+            longitude: region.longitude,
+          },
+          zoom: newZoomLevel ? 15 : 10,
+          altitude: 1000,
+          heading: 0,
+          pitch: 0,
+        }, { duration: 1000 });
+      } else {
+        // Use animateToRegion for iOS
+        mapRef.current.animateToRegion({
+          latitude: region.latitude,
+          longitude: region.longitude,
+          latitudeDelta: newZoomLevel ? 0.005 : 0.0922,
+          longitudeDelta: newZoomLevel ? 0.005 : 0.0421,
+        }, 1000);
+      }
+    }
   };
 
   return (
@@ -410,19 +302,6 @@ const HomeScreen = ({ navigation }) => {
               </TouchableOpacity>
             )}
             <TouchableOpacity 
-              style={styles.slideMenuItem} 
-              onPress={() => {
-                handleMenuClose();
-                navigation.navigate('Settings');
-              }}
-            >
-              <View style={styles.slideMenuItemContent}>
-                <Icon name="settings" size={24} color="#4a5c39" />
-                <Text style={styles.slideMenuItemText}>Settings</Text>
-              </View>
-              <Icon name="chevron-right" size={20} color="#4a5c39" />
-            </TouchableOpacity>
-            <TouchableOpacity 
               style={[styles.slideMenuItem, { borderBottomWidth: 0 }]} 
               onPress={handleSignOut}
             >
@@ -436,40 +315,53 @@ const HomeScreen = ({ navigation }) => {
         </TouchableOpacity>
       </Modal>
 
-      <ScrollView contentContainerStyle={styles.scrollViewContent} showsVerticalScrollIndicator={false}>
-        {/* Search Bar */}
-        <View style={styles.searchContainer}>
-          <Icon name="search" size={22} color="#888" style={{ marginLeft: 10 }} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search location..."
-            value={search}
-            onChangeText={setSearch}
-            placeholderTextColor="#888"
-          />
-          <TouchableOpacity style={styles.searchIconRight}>
-            <Icon name="my-location" size={22} color="#888" />
-          </TouchableOpacity>
-        </View>
+      <ScrollView 
+        ref={scrollViewRef}
+        contentContainerStyle={styles.scrollViewContent} 
+        showsVerticalScrollIndicator={false}
+      >
         {/* Map */}
         <View style={styles.mapContainer}>
           <MapView
+            ref={mapRef}
             provider={PROVIDER_GOOGLE}
             style={styles.map}
-            region={region}
-            onRegionChangeComplete={setRegion}
+            initialRegion={region}
+            showsUserLocation
+            showsMyLocationButton
+            onRegionChangeComplete={(newRegion) => {
+              // Only update region if not animating
+              if (!isZoomedIn) {
+                setRegion(newRegion);
+              }
+            }}
           >
-            {markers.map((marker) => (
+            {recentIncidents.map((incident) => (
               <Marker
-                key={marker.id}
-                coordinate={marker.coordinate}
-                title={marker.title}
-                description={marker.description}
-                onPress={() => handleMarkerPress(marker)}
-              />
+                key={incident._id}
+                coordinate={{
+                  latitude: incident.location.coordinates[1],
+                  longitude: incident.location.coordinates[0],
+                }}
+                onPress={() => handleMarkerPress(incident)}
+              >
+                {renderIncidentMarker(incident)}
+                <Callout>
+                  <View style={styles.calloutContainer}>
+                    <Text style={styles.calloutTitle}>{incident.type}</Text>
+                    <Text style={styles.calloutText}>
+                      {formatTime(incident.createdAt)}
+                    </Text>
+                  </View>
+                </Callout>
+              </Marker>
             ))}
           </MapView>
-          <Text style={styles.mapLabel}>[Interactive Map]</Text>
+          {loading && (
+            <View style={styles.loadingOverlay}>
+              <ActivityIndicator size="large" color="#4a5c39" />
+            </View>
+          )}
         </View>
         {/* Dashboard Buttons */}
         <View style={styles.dashboardButtonsContainer}>
@@ -556,9 +448,9 @@ const HomeScreen = ({ navigation }) => {
                       <Icon 
                         name={getTypeIcon(item.type)} 
                         size={24} 
-                        color={getTypeColor(item.type)} 
+                        color="#4a5c39"
                       />
-                      <Text style={[styles.incidentType, { color: getTypeColor(item.type) }]}>
+                      <Text style={[styles.incidentType, { color: '#4a5c39' }]}>
                         {item.type.charAt(0).toUpperCase() + item.type.slice(1)}
                       </Text>
                     </View>
@@ -566,7 +458,7 @@ const HomeScreen = ({ navigation }) => {
                       {formatTime(item.createdAt)}
                     </Text>
                   </View>
-                  <View style={[styles.incidentCardDivider, { backgroundColor: getTypeColor(item.type) + '20' }]} />
+                  <View style={[styles.incidentCardDivider, { backgroundColor: '#4a5c39' + '20' }]} />
                 </View>
               ))}
             </View>
@@ -608,9 +500,20 @@ const HomeScreen = ({ navigation }) => {
           )}
         </View>
       </ScrollView>
-      <BottomNav navigation={navigation} currentScreen="Home" />
+      <BottomNav 
+        navigation={navigation} 
+        currentScreen="Home"
+        onMapPress={handleMapPress}
+      />
     </RNSafeAreaViewContext>
   );
+};
+
+const HomeScreen = (props) => {
+  if (!props.navigation) {
+    return null;
+  }
+  return <HomeScreenContent {...props} />;
 };
 
 const styles = StyleSheet.create({
@@ -626,9 +529,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingVertical: 16,
     paddingHorizontal: 16,
-    borderBottomWidth: 1,
+    borderBottomWidth: 0,
     borderBottomColor: '#e0e4da',
   },
   logoContainer: {
@@ -655,30 +558,6 @@ const styles = StyleSheet.create({
   },
   menuButtonActive: {
     backgroundColor: '#f0ede3',
-  },
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    marginHorizontal: 16,
-    marginVertical: 12,
-    borderRadius: 24,
-    paddingVertical: 8,
-    paddingHorizontal: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  searchInput: {
-    flex: 1,
-    paddingHorizontal: 10,
-    fontSize: 16,
-    color: '#333',
-  },
-  searchIconRight: {
-    padding: 6,
   },
   mapContainer: {
     marginHorizontal: 16,
@@ -855,6 +734,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     borderRadius: 12,
     padding: 16,
+    paddingBottom: 32,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -979,6 +859,68 @@ const styles = StyleSheet.create({
     color: '#4a5c39',
     marginLeft: 16,
     fontWeight: '500',
+  },
+  markerContainer: {
+    backgroundColor: '#4a5c39',
+    padding: 8,
+    borderRadius: 20,
+    borderWidth: 2,
+    borderColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  markerBackground: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#fff',
+  },
+  markerIcon: {
+    width: 24,
+    height: 24,
+    tintColor: '#fff',
+  },
+  markerTriangle: {
+    width: 0,
+    height: 0,
+    backgroundColor: 'transparent',
+    borderStyle: 'solid',
+    borderLeftWidth: 8,
+    borderRightWidth: 8,
+    borderTopWidth: 8,
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    transform: [{ translateY: -1 }],
+  },
+  calloutContainer: {
+    padding: 8,
+    minWidth: 120,
+  },
+  calloutTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#2d3a22',
+    marginBottom: 4,
+  },
+  calloutText: {
+    fontSize: 14,
+    color: '#4a5c39',
+  },
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 

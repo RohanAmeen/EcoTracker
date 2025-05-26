@@ -1,18 +1,12 @@
 import React from 'react';
 import { View, Text, Image, StyleSheet, Dimensions } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import * as Animatable from 'react-native-animatable';
 
 const { width, height } = Dimensions.get('window');
 
 const SplashScreen = () => {
   return (
-    <LinearGradient
-      colors={['#f6efdc', '#6b7d5c', '#f6efdc']}
-      style={styles.container}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 0, y: 1 }}
-    >
+    <View style={styles.container}>
       <Animatable.View
         animation="fadeIn"
         duration={1500}
@@ -44,7 +38,7 @@ const SplashScreen = () => {
           Community Environmental Protection Platform
         </Animatable.Text>
       </Animatable.View>
-    </LinearGradient>
+    </View>
   );
 };
 
@@ -53,6 +47,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#4a5c39',
   },
   content: {
     alignItems: 'center',
@@ -61,18 +56,18 @@ const styles = StyleSheet.create({
   logo: {
     width: width * 0.5,
     height: width * 0.5,
-    marginBottom: 20,
+    marginBottom: 0,
   },
   title: {
     fontSize: 36,
     fontWeight: 'bold',
-    color: '#4a5c39',
+    color: '#fff',
     marginBottom: 10,
     textAlign: 'center',
   },
   tagline: {
     fontSize: 16,
-    color: '#666',
+    color: '#e0e4da',
     textAlign: 'center',
     paddingHorizontal: 20,
   },

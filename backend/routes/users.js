@@ -3,6 +3,7 @@ const router = express.Router();
 const User = require('../models/User');
 const Incident = require('../models/Incident');
 const auth = require('../middleware/auth');
+const { upload } = require('../config/cloudinary');
 
 // Get user profile
 router.get('/profile', auth, async (req, res) => {
@@ -19,7 +20,7 @@ router.get('/profile', auth, async (req, res) => {
 });
 
 // Update user profile
-router.put('/profile', auth, async (req, res) => {
+router.put('/profile', auth, upload.single('profilePicture'), async (req, res) => {
   try {
     const { name, email, username } = req.body;
     const updates = {};
@@ -27,6 +28,7 @@ router.put('/profile', auth, async (req, res) => {
     if (name) updates.name = name;
     if (email) updates.email = email;
     if (username) updates.username = username;
+    if (req.file) updates.profilePicture = req.file.path;
 
     const user = await User.findByIdAndUpdate(
       req.user._id,

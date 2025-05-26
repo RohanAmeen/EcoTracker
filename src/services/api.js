@@ -374,11 +374,27 @@ const usersAPI = {
     }
   },
 
-  updateProfile: async (profileData) => {
+  updateProfile: async (profileData, profilePicture) => {
     try {
       const token = await getToken();
       if (!token) {
         throw new Error('No authentication token found');
+      }
+
+      const formData = new FormData();
+      
+      // Add text fields
+      Object.keys(profileData).forEach(key => {
+        formData.append(key, profileData[key]);
+      });
+
+      // Add profile picture if provided
+      if (profilePicture) {
+        formData.append('profilePicture', {
+          uri: profilePicture,
+          type: 'image/jpeg',
+          name: 'profile-picture.jpg'
+        });
       }
 
       const response = await fetch(`${API_URL}/users/profile`, {
@@ -386,9 +402,9 @@ const usersAPI = {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Accept': 'application/json',
-          'Content-Type': 'application/json',
+          'Content-Type': 'multipart/form-data',
         },
-        body: JSON.stringify(profileData),
+        body: formData,
       });
 
       if (!response.ok) {

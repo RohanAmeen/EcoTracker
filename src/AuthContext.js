@@ -57,30 +57,12 @@ export const AuthProvider = ({ children }) => {
       setIsLoggedIn(false);
       setUser(null);
       setIsAdmin(false);
-      
-      // Reset navigation state and redirect to login
-      if (navigation) {
-        navigation.dispatch(
-          CommonActions.reset({
-            index: 0,
-            routes: [{ name: 'Login' }],
-          })
-        );
-      }
     } catch (error) {
       console.error('Error signing out:', error);
       // Even if there's an error, ensure we're logged out
       setIsLoggedIn(false);
       setUser(null);
       setIsAdmin(false);
-      if (navigation) {
-        navigation.dispatch(
-          CommonActions.reset({
-            index: 0,
-            routes: [{ name: 'Login' }],
-          })
-        );
-      }
     }
   };
 

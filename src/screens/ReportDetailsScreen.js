@@ -335,13 +335,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   headerText: {
-    color: '#2c3e50',
+    color: '#4a5c39',
     fontSize: 32,
     fontWeight: '900',
     letterSpacing: 0.5,
   },
   incidentId: {
-    color: '#2c3e50',
+    color: '#4a5c39',
     fontSize: 24,
     fontWeight: '700',
     opacity: 0.7,
@@ -409,7 +409,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#2c3e50',
+    color: '#4a5c39',
     marginBottom: 8,
   },
   description: {

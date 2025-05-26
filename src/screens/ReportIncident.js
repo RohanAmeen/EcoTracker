@@ -96,21 +96,21 @@ const ReportIncident = ({ navigation }) => {
       !description ||
       !severity ||
       (!type && !isOtherType) ||
-      (isOtherType && !otherTypeValue.trim())
+      (isOtherType && !otherTypeValue.trim()) ||
+      (!locationDetails && !coordinates)
     ) {
-      Alert.alert('Error', 'Please fill in all required fields');
+      Alert.alert('Error', 'Please fill in all required fields including location');
       return;
     }
 
     try {
       setLoading(true);
 
-      // Get current location
-      const location = await getCurrentLocation();
-      if (!location) {
-        setLoading(false);
-        return;
-      }
+      // Format location data correctly
+      const locationData = coordinates ? {
+        type: 'Point',
+        coordinates: [coordinates.coordinates[0], coordinates.coordinates[1]]
+      } : null;
 
       const incidentData = {
         title,
@@ -118,7 +118,8 @@ const ReportIncident = ({ navigation }) => {
         type: isOtherType ? otherTypeValue.trim() : type,
         severity,
         images,
-        location,
+        location: locationData,
+        locationDetails,
         status: 'new'
       };
 
@@ -161,11 +162,6 @@ const ReportIncident = ({ navigation }) => {
             />
           </View>
           <Text style={styles.logoText}>EcoTracker</Text>
-        </View>
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <TouchableOpacity style={styles.menuButton}>
-            <Icon name="menu" size={28} color="#4a5c39" />
-          </TouchableOpacity>
         </View>
       </View>
 
@@ -285,16 +281,58 @@ const ReportIncident = ({ navigation }) => {
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Location Details</Text>
-              <TextInput
-                style={[styles.input, styles.textArea]}
-                value={locationDetails}
-                onChangeText={setLocationDetails}
-                placeholder="e.g., 'Near Oak Street and Pine Avenue'"
-                placeholderTextColor="#888"
-                multiline
-                numberOfLines={2}
-              />
+              <Text style={styles.label}>Location Details *</Text>
+              <View style={styles.locationContainer}>
+                <TextInput
+                  style={[styles.input, styles.locationInput]}
+                  value={locationDetails}
+                  onChangeText={setLocationDetails}
+                  placeholder="e.g., 'Near Oak Street and Pine Avenue'"
+                  placeholderTextColor="#888"
+                  multiline
+                  numberOfLines={2}
+                />
+                <TouchableOpacity 
+                  style={styles.locationButton}
+                  onPress={async () => {
+                    try {
+                      const { status } = await Location.requestForegroundPermissionsAsync();
+                      if (status !== 'granted') {
+                        Alert.alert('Permission Denied', 'Please allow location access to get your current location.');
+                        return;
+                      }
+
+                      const location = await Location.getCurrentPositionAsync({});
+                      const address = await Location.reverseGeocodeAsync({
+                        latitude: location.coords.latitude,
+                        longitude: location.coords.longitude
+                      });
+
+                      if (address && address[0]) {
+                        const { street, city, region, country } = address[0];
+                        const addressString = [street, city, region, country].filter(Boolean).join(', ');
+                        setLocationDetails(addressString);
+                        setCoordinates({
+                          type: 'Point',
+                          coordinates: [location.coords.longitude, location.coords.latitude]
+                        });
+                      } else {
+                        // If no address found, still set coordinates but with a generic location detail
+                        setLocationDetails('Location coordinates available');
+                        setCoordinates({
+                          type: 'Point',
+                          coordinates: [location.coords.longitude, location.coords.latitude]
+                        });
+                      }
+                    } catch (error) {
+                      console.error('Error getting location:', error);
+                      Alert.alert('Error', 'Failed to get your location. Please try again.');
+                    }
+                  }}
+                >
+                  <Icon name="my-location" size={24} color="#4a5c39" />
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
 
@@ -367,9 +405,6 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#4a5c39',
     letterSpacing: 1,
-  },
-  menuButton: {
-    padding: 4,
   },
   scrollViewContent: {
     flex: 1,
@@ -567,6 +602,21 @@ const styles = StyleSheet.create({
   },
   submitButtonDisabled: {
     opacity: 0.7,
+  },
+  locationContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+  },
+  locationInput: {
+    flex: 1,
+  },
+  locationButton: {
+    backgroundColor: '#f6f8f3',
+    padding: 12,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 

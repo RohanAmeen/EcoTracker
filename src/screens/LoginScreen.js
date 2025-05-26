@@ -10,7 +10,6 @@ import {
   Alert,
   Image,
   Dimensions,
-  ScrollView,
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -86,21 +85,21 @@ const LoginScreen = () => {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "left", "right", "bottom"]}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.container}
-      >
-        <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-          <View style={styles.header}>
-            <Image
-              source={require('../../assets/logo.png')}
-              style={styles.logo}
-              resizeMode="contain"
-            />
-            <Text style={styles.appTitle}>EcoTracker</Text>
-            <Text style={styles.subtitle}>Protecting Our Environment Together</Text>
-          </View>
+      <View style={styles.mainContainer}>
+        <View style={styles.header}>
+          <Image
+            source={require('../../assets/logo.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+          <Text style={styles.appTitle}>EcoTracker</Text>
+          <Text style={styles.subtitle}>Protecting Our Environment Together</Text>
+        </View>
 
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.keyboardView}
+        >
           <View style={styles.formContainer}>
             <Text style={styles.welcome}>Welcome</Text>
             <Text style={styles.label}>Email</Text>
@@ -157,8 +156,9 @@ const LoginScreen = () => {
               <Text style={styles.signupButtonText}>Sign Up</Text>
             </TouchableOpacity>
           </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
+        </KeyboardAvoidingView>
+      </View>
+      <View style={styles.footer} />
     </SafeAreaView>
   );
 };
@@ -168,11 +168,8 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#4a5c39',
   },
-  container: {
+  mainContainer: {
     flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
   },
   header: {
     width: '100%',
@@ -180,6 +177,32 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingBottom: 24,
     backgroundColor: '#4a5c39',
+  },
+  keyboardView: {
+    flex: 1,
+  },
+  formContainer: {
+    backgroundColor: '#fff',
+    width: '100%',
+    maxWidth: 500,
+    alignSelf: 'center',
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    paddingHorizontal: 32,
+    paddingTop: 32,
+    paddingBottom: Platform.OS === 'ios' ? 100 : 32,
+    marginTop: 40,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
+    flex: 1,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
   logo: {
     width: 64,
@@ -199,23 +222,6 @@ const styles = StyleSheet.create({
     marginBottom: 0,
     textAlign: 'center',
     letterSpacing: 0.5,
-  },
-  formContainer: {
-    backgroundColor: '#fff',
-    width: '100%',
-    maxWidth: 500,
-    alignSelf: 'center',
-    borderTopLeftRadius: 32,
-    borderTopRightRadius: 32,
-    paddingHorizontal: 32,
-    paddingTop: 32,
-    paddingBottom: 32,
-    marginTop: 40,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 5,
   },
   welcome: {
     fontSize: 24,
@@ -302,6 +308,13 @@ const styles = StyleSheet.create({
   },
   disabledButton: {
     opacity: 0.7,
+  },
+  footer: {
+    backgroundColor: '#fff',
+    height: Platform.OS === 'ios' ? 100 : 50,
+    width: '100%',
+    position: 'absolute',
+    bottom: 0,
   },
 });
 

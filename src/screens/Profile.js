@@ -28,6 +28,7 @@ const Profile = ({ navigation }) => {
     name: '',
     email: '',
     username: '',
+    profilePicture: null,
   });
   const [editedData, setEditedData] = useState({ ...userData });
 
@@ -44,12 +45,15 @@ const Profile = ({ navigation }) => {
         name: data.name || data.username,
         email: data.email,
         username: data.username,
+        profilePicture: data.profilePicture,
       });
       setEditedData({
         name: data.name || data.username,
         email: data.email,
         username: data.username,
+        profilePicture: data.profilePicture,
       });
+      setProfileImage(data.profilePicture);
     } catch (error) {
       console.error('Error fetching profile:', error);
       Alert.alert('Error', 'Failed to fetch profile data');
@@ -70,7 +74,7 @@ const Profile = ({ navigation }) => {
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [1, 1],
-      quality: 1,
+      quality: 0.8,
     });
 
     if (!result.canceled) {
@@ -85,8 +89,12 @@ const Profile = ({ navigation }) => {
 
   const handleSave = async () => {
     try {
-      const updatedUser = await usersAPI.updateProfile(editedData);
-      setUserData(updatedUser);
+      const updatedUser = await usersAPI.updateProfile(editedData, profileImage);
+      setUserData({
+        ...updatedUser,
+        name: updatedUser.name || updatedUser.username,
+      });
+      setProfileImage(updatedUser.profilePicture);
       setIsEditing(false);
       Alert.alert('Success', 'Profile updated successfully!');
     } catch (error) {
@@ -184,7 +192,10 @@ const Profile = ({ navigation }) => {
       <ScrollView style={styles.scrollViewContent} showsVerticalScrollIndicator={false}>
         <View style={styles.profileContainer}>
           <View style={styles.profileHeader}>
-            <TouchableOpacity style={styles.profileImageContainer} onPress={pickImage}>
+            <TouchableOpacity 
+              style={styles.profileImageContainer} 
+              onPress={isEditing ? pickImage : undefined}
+            >
               {profileImage ? (
                 <Image source={{ uri: profileImage }} style={styles.profileImage} />
               ) : (
@@ -192,9 +203,11 @@ const Profile = ({ navigation }) => {
                   <Icon name="person" size={50} color="#4a5c39" />
                 </View>
               )}
-              <View style={styles.editImageButton}>
-                <Icon name="edit" size={20} color="#fff" />
-              </View>
+              {isEditing && (
+                <View style={styles.editImageButton}>
+                  <Icon name="edit" size={20} color="#fff" />
+                </View>
+              )}
             </TouchableOpacity>
             <Text style={styles.name}>{userData.name}</Text>
             <Text style={styles.username}>@{userData.username}</Text>

@@ -10,7 +10,6 @@ import {
   Alert,
   Image,
   Dimensions,
-  ScrollView,
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -65,21 +64,21 @@ const SignupScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "left", "right", "bottom"]}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.container}
-      >
-        <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-          <View style={styles.header}>
-            <Image
-              source={require('../../assets/logo.png')}
-              style={styles.logo}
-              resizeMode="contain"
-            />
-            <Text style={styles.appTitle}>EcoTracker</Text>
-            <Text style={styles.subtitle}>Join Our Environmental Protection Community</Text>
-          </View>
+      <View style={styles.mainContainer}>
+        <View style={styles.header}>
+          <Image
+            source={require('../../assets/logo.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+          <Text style={styles.appTitle}>EcoTracker</Text>
+          <Text style={styles.subtitle}>Join Our Community</Text>
+        </View>
 
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.keyboardView}
+        >
           <View style={styles.formContainer}>
             <Text style={styles.welcome}>Create Account</Text>
             <Text style={styles.label}>Username</Text>
@@ -147,8 +146,9 @@ const SignupScreen = ({ navigation }) => {
               <Text style={styles.loginButtonText}>Login</Text>
             </TouchableOpacity>
           </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
+        </KeyboardAvoidingView>
+      </View>
+      <View style={styles.footer} />
     </SafeAreaView>
   );
 };
@@ -158,11 +158,15 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#4a5c39',
   },
-  container: {
+  mainContainer: {
     flex: 1,
   },
-  scrollContent: {
-    flexGrow: 1,
+  footer: {
+    backgroundColor: '#fff',
+    height: Platform.OS === 'ios' ? 100 : 50,
+    width: '100%',
+    position: 'absolute',
+    bottom: 0,
   },
   header: {
     width: '100%',
@@ -185,8 +189,11 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 14,
     color: '#f0f0f0',
-    marginBottom: 0,
+    marginBottom: 24,
     textAlign: 'center',
+  },
+  keyboardView: {
+    flex: 1,
   },
   formContainer: {
     backgroundColor: '#fff',
@@ -200,6 +207,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 28,
     paddingTop: 28,
     paddingBottom: 24,
+    marginBottom: Platform.OS === 'ios' ? 100 : 50,
   },
   welcome: {
     fontSize: 22,
@@ -258,6 +266,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     alignItems: 'center',
     backgroundColor: '#fff',
+    marginBottom: 80,
   },
   loginButtonText: {
     color: '#4a5c39',

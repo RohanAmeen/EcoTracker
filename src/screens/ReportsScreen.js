@@ -81,7 +81,10 @@ const ReportsScreen = ({ navigation }) => {
   );
 
   const renderReportItem = ({ item }) => (
-    <View style={styles.reportItem}>
+    <TouchableOpacity 
+      style={styles.reportItem}
+      onPress={() => navigation.navigate('ReportDetails', { report: item })}
+    >
       <View style={styles.reportHeader}>
         <View style={styles.titleContainer}>
           <View style={styles.typeContainer}>
@@ -110,6 +113,21 @@ const ReportsScreen = ({ navigation }) => {
       <Text style={styles.reportDescription} numberOfLines={2}>
         {item.description}
       </Text>
+
+      {item.images && item.images.length > 0 && (
+        <View style={styles.imageContainer}>
+          <Image
+            source={{ uri: item.images[0] }}
+            style={styles.reportImage}
+            resizeMode="cover"
+          />
+          {item.images.length > 1 && (
+            <View style={styles.imageCountBadge}>
+              <Text style={styles.imageCountText}>+{item.images.length - 1}</Text>
+            </View>
+          )}
+        </View>
+      )}
 
       <View style={styles.detailsContainer}>
         <View style={styles.detailRow}>
@@ -157,7 +175,7 @@ const ReportsScreen = ({ navigation }) => {
           </View>
         </View>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 
   const getStatusColor = (status) => {
@@ -237,14 +255,6 @@ const ReportsScreen = ({ navigation }) => {
             </View>
             <Text style={styles.logoText}>EcoTracker</Text>
           </View>
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <TouchableOpacity 
-              style={[styles.menuButton, isMenuVisible && styles.menuButtonActive]} 
-              onPress={handleMenuPress}
-            >
-              <Icon name="menu" size={28} color="#4a5c39" />
-            </TouchableOpacity>
-          </View>
         </View>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#6b7a5e" />
@@ -266,90 +276,7 @@ const ReportsScreen = ({ navigation }) => {
           </View>
           <Text style={styles.logoText}>EcoTracker</Text>
         </View>
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <TouchableOpacity 
-            style={[styles.menuButton, isMenuVisible && styles.menuButtonActive]} 
-            onPress={handleMenuPress}
-          >
-            <Icon name="menu" size={28} color="#4a5c39" />
-          </TouchableOpacity>
-        </View>
       </View>
-
-      <Modal
-        visible={isMenuVisible}
-        transparent={true}
-        animationType="none"
-        onRequestClose={handleMenuClose}
-      >
-        <TouchableOpacity 
-          style={[styles.modalOverlay, isMenuClosing && styles.modalOverlayClosing]} 
-          activeOpacity={1} 
-          onPress={handleMenuClose}
-        >
-          <View style={[styles.slideMenu, isMenuClosing && styles.slideMenuClosing]}>
-            <View style={styles.slideMenuHeader}>
-              <Text style={styles.slideMenuTitle}>Menu</Text>
-              <TouchableOpacity onPress={handleMenuClose}>
-                <Icon name="close" size={24} color="#4a5c39" />
-              </TouchableOpacity>
-            </View>
-            <View style={styles.slideMenuDivider} />
-            {!isLoggedIn ? (
-              <TouchableOpacity 
-                style={styles.slideMenuItem} 
-                onPress={() => {
-                  handleMenuClose();
-                  navigation.navigate('Login');
-                }}
-              >
-                <View style={styles.slideMenuItemContent}>
-                  <Icon name="login" size={24} color="#4a5c39" />
-                  <Text style={styles.slideMenuItemText}>Login</Text>
-                </View>
-                <Icon name="chevron-right" size={20} color="#4a5c39" />
-              </TouchableOpacity>
-            ) : (
-              <TouchableOpacity 
-                style={styles.slideMenuItem} 
-                onPress={() => {
-                  handleMenuClose();
-                  navigation.navigate('Profile');
-                }}
-              >
-                <View style={styles.slideMenuItemContent}>
-                  <Icon name="person" size={24} color="#4a5c39" />
-                  <Text style={styles.slideMenuItemText}>Profile</Text>
-                </View>
-                <Icon name="chevron-right" size={20} color="#4a5c39" />
-              </TouchableOpacity>
-            )}
-            <TouchableOpacity 
-              style={styles.slideMenuItem} 
-              onPress={() => {
-                handleMenuClose();
-                navigation.navigate('Settings');
-              }}
-            >
-              <View style={styles.slideMenuItemContent}>
-                <Icon name="settings" size={24} color="#4a5c39" />
-                <Text style={styles.slideMenuItemText}>Settings</Text>
-              </View>
-              <Icon name="chevron-right" size={20} color="#4a5c39" />
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.slideMenuItem, { borderBottomWidth: 0 }]} 
-              onPress={handleSignOut}
-            >
-              <View style={styles.slideMenuItemContent}>
-                <Icon name="logout" size={24} color="#4a5c39" />
-                <Text style={styles.slideMenuItemText}>Sign Out</Text>
-              </View>
-              <Icon name="chevron-right" size={20} color="#4a5c39" />
-            </TouchableOpacity>
-          </View>
-        </TouchableOpacity>
-      </Modal>
 
       <FlatList
         data={reports}
@@ -573,75 +500,29 @@ const styles = StyleSheet.create({
     color: '#4a5c39',
     letterSpacing: 1,
   },
-  menuButton: {
-    padding: 8,
-    borderRadius: 8,
-  },
-  menuButtonActive: {
-    backgroundColor: '#f0ede3',
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
-    opacity: 1,
-  },
-  modalOverlayClosing: {
-    opacity: 0,
-  },
-  slideMenu: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
+  reportImage: {
     width: '100%',
-    height: '100%',
-    backgroundColor: '#f0ede3',
-    shadowColor: '#000',
-    shadowOffset: { width: -2, height: 0 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 5,
-    opacity: 1,
+    height: 200,
+    borderRadius: 12,
+    marginTop: 12,
   },
-  slideMenuClosing: {
-    opacity: 0,
+  imageContainer: {
+    position: 'relative',
+    marginTop: 12,
   },
-  slideMenuHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingTop: 16,
-    paddingHorizontal: 20,
-    paddingBottom: 20,
-    marginTop: Platform.OS === 'ios' ? 50 : 40,
+  imageCountBadge: {
+    position: 'absolute',
+    bottom: 8,
+    right: 8,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
   },
-  slideMenuTitle: {
-    fontSize: 24,
+  imageCountText: {
+    color: '#fff',
+    fontSize: 12,
     fontWeight: '600',
-    color: '#4a5c39',
-  },
-  slideMenuDivider: {
-    height: 1,
-    backgroundColor: '#e0e4da',
-    marginHorizontal: 20,
-  },
-  slideMenuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e4da',
-  },
-  slideMenuItemContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  slideMenuItemText: {
-    fontSize: 16,
-    color: '#4a5c39',
-    marginLeft: 16,
-    fontWeight: '500',
   },
 });
 

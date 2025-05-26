@@ -167,7 +167,7 @@ const AdminDashboard = ({ navigation }) => {
       </View>
 
       <View style={styles.searchContainer}>
-        <Icon name="search" size={20} color="#666" style={styles.searchIcon} />
+        <Icon name="search" size={20} color="#4a5c39" style={styles.searchIcon} />
         <TextInput
           style={styles.searchInput}
           placeholder="Search reports..."
@@ -244,7 +244,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   headerText: {
-    color: '#2c3e50',
+    color: '#4a5c39',
     fontSize: 32,
     fontWeight: 'bold',
     fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif-medium',
@@ -268,6 +268,7 @@ const styles = StyleSheet.create({
   },
   searchIcon: {
     marginRight: 8,
+    color: '#4a5c39',
   },
   searchInput: {
     flex: 1,
@@ -293,7 +294,7 @@ const styles = StyleSheet.create({
     shadowRadius: 1,
   },
   filterButtonActive: {
-    backgroundColor: '#2c3e50',
+    backgroundColor: '#4a5c39',
   },
   filterButtonText: {
     color: '#666',
