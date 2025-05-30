@@ -19,6 +19,12 @@ import StatisticsScreen from '../screens/StatisticsScreen';
 
 const Stack = createStackNavigator();
 
+/**
+ * AppNavigator Component
+ * Manages the navigation structure of the app
+ * Handles authentication state and conditional rendering of screens
+ * Implements a splash screen and different navigation stacks for users and admins
+ */
 const AppNavigator = () => {
   const { isLoggedIn, user, isAdmin } = useAuth();
   const [showSplash, setShowSplash] = useState(true);
@@ -46,16 +52,22 @@ const AppNavigator = () => {
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {!isLoggedIn ? (
+          // Authentication Stack
+          // Shown when user is not logged in
           <>
             <Stack.Screen name="Login" component={LoginScreen} />
             <Stack.Screen name="Signup" component={SignupScreen} />
           </>
         ) : isAdmin ? (
+          // Admin Stack
+          // Shown when user is logged in and has admin privileges
           <>
             <Stack.Screen name="AdminDashboard" component={AdminDashboard} />
             <Stack.Screen name="ReportDetails" component={ReportDetailsScreen} />
           </>
         ) : (
+          // User Stack
+          // Shown when user is logged in as a regular user
           <>
             <Stack.Screen name="Home" component={HomeScreen} />
             <Stack.Screen name="ReportIncident" component={ReportIncident} />

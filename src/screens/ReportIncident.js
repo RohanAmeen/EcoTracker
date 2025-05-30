@@ -23,8 +23,16 @@ import * as Location from 'expo-location';
 
 const { width } = Dimensions.get('window');
 
+/**
+ * ReportIncident Component
+ * Allows users to report environmental incidents with details like type, severity, location, and images
+ * Handles form input, image selection, location detection, and submission to the API
+ */
 const ReportIncident = ({ navigation }) => {
+  // Get current user from auth context
   const { user } = useAuth();
+
+  // Form state management
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [type, setType] = useState('');
@@ -36,6 +44,11 @@ const ReportIncident = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
   const [coordinates, setCoordinates] = useState(null);
 
+  /**
+   * Handles image selection from device gallery
+   * Requests permissions and allows multiple image selection
+   * Updates images state with selected image URIs
+   */
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     
@@ -55,10 +68,19 @@ const ReportIncident = ({ navigation }) => {
     }
   };
 
+  /**
+   * Removes an image from the selected images
+   * @param {string} uriToRemove - URI of the image to remove
+   */
   const removeImage = (uriToRemove) => {
     setImages(images.filter(uri => uri !== uriToRemove));
   };
 
+  /**
+   * Handles incident type selection
+   * Shows additional input field for 'other' type
+   * @param {string} option - Selected incident type
+   */
   const handleTypeSelect = (option) => {
     setType(option);
     if (option === 'other') {
@@ -70,6 +92,11 @@ const ReportIncident = ({ navigation }) => {
     }
   };
 
+  /**
+   * Gets current device location using Expo Location
+   * Requests location permissions if needed
+   * @returns {Object|null} Location coordinates or null if permission denied
+   */
   const getCurrentLocation = async () => {
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
@@ -90,7 +117,15 @@ const ReportIncident = ({ navigation }) => {
     }
   };
 
+  /**
+   * Handles form submission
+   * Validates required fields
+   * Formats location data
+   * Submits incident to API
+   * Shows success/error messages
+   */
   const handleSubmit = async () => {
+    // Validate required fields
     if (
       !title ||
       !description ||
@@ -106,12 +141,13 @@ const ReportIncident = ({ navigation }) => {
     try {
       setLoading(true);
 
-      // Format location data correctly
+      // Format location data for API
       const locationData = coordinates ? {
         type: 'Point',
         coordinates: [coordinates.coordinates[0], coordinates.coordinates[1]]
       } : null;
 
+      // Prepare incident data
       const incidentData = {
         title,
         description,
@@ -123,6 +159,7 @@ const ReportIncident = ({ navigation }) => {
         status: 'new'
       };
 
+      // Submit to API
       console.log('Submitting incident data:', JSON.stringify(incidentData, null, 2));
       const response = await incidentsAPI.createIncident(incidentData);
       console.log('Server response:', JSON.stringify(response, null, 2));
@@ -132,6 +169,7 @@ const ReportIncident = ({ navigation }) => {
         return;
       }
 
+      // Show success message and navigate back
       Alert.alert(
         'Success',
         'Incident reported successfully!',

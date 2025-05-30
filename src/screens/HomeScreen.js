@@ -25,27 +25,46 @@ import BottomNav from '../components/BottomNav';
 import { CommonActions, useFocusEffect } from '@react-navigation/native';
 import { incidentsAPI, usersAPI } from '../services/api';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import { requestNotificationPermissions, sendLocalNotification } from '../services/notifications';
 
+/**
+ * HomeScreenContent Component
+ * Main content component for the home screen
+ * Handles all the UI and functionality for the home screen
+ */
 const HomeScreenContent = ({ navigation }) => {
+  // Authentication context
   const { isLoggedIn, signOut, setNavigation } = useAuth();
+
+  // State for map region (default centered on Pakistan)
   const [region, setRegion] = useState({
     latitude: 30.3753,  // Center of Pakistan
     longitude: 69.3451, // Center of Pakistan
     latitudeDelta: 8,   // Closer zoom level to show Pakistan
     longitudeDelta: 8,  // Closer zoom level to show Pakistan
   });
+
+  // UI state management
   const [isReportPressed, setIsReportPressed] = useState(false);
   const [isViewReportsPressed, setIsViewReportsPressed] = useState(false);
   const [isMenuVisible, setIsMenuVisible] = useState(false);
   const [isMenuClosing, setIsMenuClosing] = useState(false);
+  const [isZoomedIn, setIsZoomedIn] = useState(false);
+
+  // Data state management
   const [recentIncidents, setRecentIncidents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [leaderboardData, setLeaderboardData] = useState([]);
   const [loadingLeaderboard, setLoadingLeaderboard] = useState(true);
+
+  // Refs for map and scroll view
   const mapRef = useRef(null);
   const scrollViewRef = useRef(null);
-  const [isZoomedIn, setIsZoomedIn] = useState(false);
 
+  /**
+   * Effect to fetch data when screen is focused
+   * Only runs if user is logged in
+   */
   useFocusEffect(
     useCallback(() => {
       if (!isLoggedIn) {
@@ -56,6 +75,10 @@ const HomeScreenContent = ({ navigation }) => {
     }, [isLoggedIn])
   );
 
+  /**
+   * Effect to request location permissions and get current location
+   * Runs once when component mounts
+   */
   useEffect(() => {
     (async () => {
       let { status } = await Location.requestForegroundPermissionsAsync();
@@ -77,6 +100,18 @@ const HomeScreenContent = ({ navigation }) => {
     })();
   }, []);
 
+  /**
+   * Effect to request notification permissions
+   * Runs once when component mounts
+   */
+  useEffect(() => {
+    requestNotificationPermissions();
+  }, []);
+
+  /**
+   * Fetches recent environmental incidents from the API
+   * Updates the recentIncidents state with the fetched data
+   */
   const fetchRecentIncidents = async () => {
     try {
       setLoading(true);
@@ -86,6 +121,7 @@ const HomeScreenContent = ({ navigation }) => {
         return;
       }
 
+      // Filter out invalid incidents
       const validIncidents = response.filter(incident => {
         return incident.location && 
                incident.location.coordinates && 
@@ -101,6 +137,10 @@ const HomeScreenContent = ({ navigation }) => {
     }
   };
 
+  /**
+   * Fetches leaderboard data from the API
+   * Updates the leaderboardData state with the fetched data
+   */
   const fetchLeaderboard = async () => {
     try {
       setLoadingLeaderboard(true);
@@ -114,10 +154,16 @@ const HomeScreenContent = ({ navigation }) => {
     }
   };
 
+  // Don't render anything if user is not logged in
   if (!isLoggedIn) {
-    return null; // Don't render anything if not logged in
+    return null;
   }
 
+  /**
+   * Helper function to get the appropriate icon for each incident type
+   * @param {string} type - The type of incident
+   * @returns {string} - The name of the icon to use
+   */
   const getTypeIcon = (type) => {
     switch (type?.toLowerCase()) {
       case 'trash':
@@ -133,10 +179,17 @@ const HomeScreenContent = ({ navigation }) => {
     }
   };
 
+  /**
+   * Helper function to get the color for incident types
+   * Currently returns a consistent color for all types
+   */
   const getTypeColor = (type) => {
     return '#4a5c39';  // Always return logo color
   };
 
+  /**
+   * Handlers for various user interactions
+   */
   const handleMarkerPress = (incident) => {
     navigation.navigate('IncidentDetails', { incident });
   };
@@ -175,6 +228,11 @@ const HomeScreenContent = ({ navigation }) => {
     signOut();
   };
 
+  /**
+   * Formats timestamp into a readable date string
+   * @param {string} timestamp - The timestamp to format
+   * @returns {string} - Formatted date string
+   */
   const formatTime = (timestamp) => {
     const date = new Date(timestamp);
     return date.toLocaleString('en-US', {
@@ -186,6 +244,11 @@ const HomeScreenContent = ({ navigation }) => {
     });
   };
 
+  /**
+   * Renders the marker for an incident on the map
+   * @param {Object} incident - The incident to render
+   * @returns {JSX.Element} - The marker component
+   */
   const renderIncidentMarker = (incident) => {
     const iconName = getTypeIcon(incident.type);
     return (
@@ -195,6 +258,10 @@ const HomeScreenContent = ({ navigation }) => {
     );
   };
 
+  /**
+   * Handles map press to toggle zoom level
+   * Scrolls to map section and animates zoom
+   */
   const handleMapPress = () => {
     // Scroll to map section
     if (scrollViewRef.current) {
@@ -230,6 +297,22 @@ const HomeScreenContent = ({ navigation }) => {
     }
   };
 
+  /**
+   * Handles notification button press
+   * Sends a local notification to the user
+   */
+  const handleNotificationPress = async () => {
+    try {
+      await sendLocalNotification(
+        'EcoTracker Alert',
+        'Thank you for helping keep our environment clean!'
+      );
+    } catch (error) {
+      console.error('Error sending notification:', error);
+      Alert.alert('Error', 'Failed to send notification');
+    }
+  };
+
   return (
     <RNSafeAreaViewContext style={styles.safeArea} edges={["top", "left", "right", "bottom"]}>
       <View style={styles.headerContent}>
@@ -244,6 +327,12 @@ const HomeScreenContent = ({ navigation }) => {
           <Text style={styles.logoText}>EcoTracker</Text>
         </View>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <TouchableOpacity 
+            style={styles.notificationButton}
+            onPress={handleNotificationPress}
+          >
+            <Icon name="notifications" size={24} color="#4a5c39" />
+          </TouchableOpacity>
           <TouchableOpacity 
             style={[styles.menuButton, isMenuVisible && styles.menuButtonActive]} 
             onPress={handleMenuPress}
@@ -551,6 +640,12 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#4a5c39',
     letterSpacing: 1,
+  },
+  notificationButton: {
+    padding: 8,
+    marginRight: 8,
+    borderRadius: 20,
+    backgroundColor: '#f0f0f0',
   },
   menuButton: {
     padding: 8,

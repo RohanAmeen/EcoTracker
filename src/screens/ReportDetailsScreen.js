@@ -16,12 +16,26 @@ import { incidentsAPI } from '../services/api';
 
 const { width, height } = Dimensions.get('window');
 
+/**
+ * ReportDetailsScreen Component
+ * Displays detailed information about a specific environmental incident report
+ * Shows report type, status, severity, description, images, location, and reporter info
+ * Allows admins to update report status or delete reports
+ */
 const ReportDetailsScreen = ({ route, navigation }) => {
+  // Get report data from route params
   const { report } = route.params;
+  
+  // State management
   const [loading, setLoading] = React.useState(false);
   const [selectedImage, setSelectedImage] = React.useState(null);
   const [currentImageIndex, setCurrentImageIndex] = React.useState(0);
 
+  /**
+   * Helper function to get color based on report status
+   * @param {string} status - The status of the report
+   * @returns {string} - Color code for the status
+   */
   const getStatusColor = (status) => {
     switch (status) {
       case 'in-progress':
@@ -35,6 +49,11 @@ const ReportDetailsScreen = ({ route, navigation }) => {
     }
   };
 
+  /**
+   * Helper function to get icon based on report type
+   * @param {string} type - The type of incident
+   * @returns {string} - Icon name for the type
+   */
   const getTypeIcon = (type) => {
     if (!type) return 'warning';
     
@@ -52,6 +71,11 @@ const ReportDetailsScreen = ({ route, navigation }) => {
     }
   };
 
+  /**
+   * Helper function to get color based on report severity
+   * @param {string} severity - The severity of the report
+   * @returns {string} - Color code for the severity
+   */
   const getSeverityColor = (severity) => {
     switch (severity?.toLowerCase()) {
       case 'low':
@@ -65,11 +89,21 @@ const ReportDetailsScreen = ({ route, navigation }) => {
     }
   };
 
+  /**
+   * Handles image press to show full-screen view
+   * @param {string} image - URI of the selected image
+   * @param {number} index - Index of the selected image
+   */
   const handleImagePress = (image, index) => {
     setSelectedImage(image);
     setCurrentImageIndex(index);
   };
 
+  /**
+   * Renders the images section with horizontal scroll
+   * Shows image count and handles image selection
+   * @returns {JSX.Element} - Images section component
+   */
   const renderImages = () => {
     if (!report.images || report.images.length === 0) {
       return (
@@ -106,6 +140,12 @@ const ReportDetailsScreen = ({ route, navigation }) => {
     );
   };
 
+  /**
+   * Handles updating the report status
+   * Makes API call to update status
+   * Navigates back on success
+   * @param {string} status - New status to set
+   */
   const handleStatusChange = async (status) => {
     try {
       setLoading(true);
@@ -118,6 +158,11 @@ const ReportDetailsScreen = ({ route, navigation }) => {
     }
   };
 
+  /**
+   * Handles deleting the report
+   * Makes API call to delete report
+   * Navigates back on success
+   */
   const handleDelete = async () => {
     try {
       setLoading(true);

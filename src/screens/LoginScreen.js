@@ -19,14 +19,32 @@ import { useNavigation } from '@react-navigation/native';
 
 const { height, width } = Dimensions.get('window');
 
+/**
+ * LoginScreen Component
+ * Handles user authentication and login functionality
+ * Provides a form for email and password input
+ * Includes forgot password and signup options
+ */
 const LoginScreen = () => {
+  // Get authentication context functions
   const { setIsLoggedIn, setUser, setIsAdmin } = useAuth();
+  
+  // Form state management
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  
+  // Navigation hook
   const navigation = useNavigation();
 
+  /**
+   * Handles the login process
+   * Validates input fields
+   * Makes API call to authenticate user
+   * Updates authentication context on success
+   */
   const handleLogin = async () => {
+    // Validate input fields
     if (!email || !password) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
@@ -46,11 +64,11 @@ const LoginScreen = () => {
         return;
       }
 
-      // Check if user is admin
+      // Check if user is admin based on email domain
       const isAdminUser = email.endsWith('@admin.com');
       setIsAdmin(isAdminUser);
 
-      // Set user data and login state
+      // Update authentication context
       setUser(response.user);
       setIsLoggedIn(true);
 
@@ -63,6 +81,11 @@ const LoginScreen = () => {
     }
   };
 
+  /**
+   * Handles forgot password functionality
+   * Validates email input
+   * Shows success message (actual password reset would be implemented in the API)
+   */
   const handleForgotPassword = async () => {
     if (!email) {
       Alert.alert('Error', 'Please enter your email address first');

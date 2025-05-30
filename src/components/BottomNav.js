@@ -2,7 +2,19 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
+/**
+ * BottomNav Component
+ * Provides bottom navigation bar for the app
+ * Shows different navigation options based on the current screen
+ * Handles navigation between main app sections
+ * 
+ * @param {Object} props
+ * @param {Object} props.navigation - Navigation object from React Navigation
+ * @param {string} props.currentScreen - Name of the currently active screen
+ * @param {Function} props.onMapPress - Optional callback for map button press
+ */
 const BottomNav = ({ navigation, currentScreen, onMapPress }) => {
+  // Define navigation items with their properties
   const navItems = [
     {
       name: 'Home',
@@ -64,6 +76,7 @@ const BottomNav = ({ navigation, currentScreen, onMapPress }) => {
   );
 };
 
+// Styles for the bottom navigation
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',

@@ -1,9 +1,13 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 
-const API_URL = 'http://192.168.100.177:5001/api';
+// Base API URL for all endpoints
+const API_URL = 'http://192.168.100.156:5001/api';
 
-// Helper function to get auth token
+/**
+ * Helper function to retrieve authentication token from AsyncStorage
+ * @returns {Promise<string|null>} The stored token or null if not found
+ */
 const getToken = async () => {
   try {
     return await AsyncStorage.getItem('token');
@@ -13,8 +17,18 @@ const getToken = async () => {
   }
 };
 
-// Authentication API calls
+/**
+ * Authentication API endpoints
+ * Handles user registration, login, logout, and password reset
+ */
 const authAPI = {
+  /**
+   * Register a new user
+   * @param {string} username - User's username
+   * @param {string} email - User's email
+   * @param {string} password - User's password
+   * @returns {Promise<Object>} Response containing token and user data
+   */
   register: async (username, email, password) => {
     try {
       const response = await fetch(`${API_URL}/auth/register`, {
@@ -36,6 +50,12 @@ const authAPI = {
     }
   },
 
+  /**
+   * Login an existing user
+   * @param {string} email - User's email
+   * @param {string} password - User's password
+   * @returns {Promise<Object>} Response containing token and user data
+   */
   login: async (email, password) => {
     try {
       const response = await fetch(`${API_URL}/auth/login`, {
@@ -57,6 +77,10 @@ const authAPI = {
     }
   },
 
+  /**
+   * Logout the current user
+   * Removes token and user data from AsyncStorage
+   */
   logout: async () => {
     try {
       await AsyncStorage.removeItem('token');
@@ -67,6 +91,11 @@ const authAPI = {
     }
   },
 
+  /**
+   * Request password reset for a user
+   * @param {string} email - User's email
+   * @returns {Promise<Object>} Response from the server
+   */
   forgotPassword: async (email) => {
     try {
       const response = await fetch(`${API_URL}/auth/forgot-password`, {
@@ -85,8 +114,16 @@ const authAPI = {
   },
 };
 
-// Incidents API calls
+/**
+ * Incidents API endpoints
+ * Handles CRUD operations for environmental incidents
+ */
 const incidentsAPI = {
+  /**
+   * Create a new incident report
+   * @param {Object} incidentData - Incident details including title, description, type, etc.
+   * @returns {Promise<Object>} Created incident data
+   */
   createIncident: async (incidentData) => {
     try {
       const token = await getToken();
@@ -94,7 +131,7 @@ const incidentsAPI = {
         throw new Error('No authentication token found');
       }
 
-      // Create FormData object
+      // Create FormData object for multipart/form-data
       const formData = new FormData();
       
       // Add text fields
@@ -105,7 +142,7 @@ const incidentsAPI = {
       formData.append('status', incidentData.status);
       formData.append('location', JSON.stringify(incidentData.location));
 
-      // Add images
+      // Add images with proper formatting
       if (incidentData.images && incidentData.images.length > 0) {
         incidentData.images.forEach((uri, index) => {
           const filename = uri.split('/').pop();
@@ -119,8 +156,6 @@ const incidentsAPI = {
           });
         });
       }
-
-      console.log('Sending form data:', formData);
 
       const response = await fetch(`${API_URL}/incidents`, {
         method: 'POST',
@@ -143,6 +178,10 @@ const incidentsAPI = {
     }
   },
 
+  /**
+   * Get incidents reported by the current user
+   * @returns {Promise<Array>} Array of user's incidents
+   */
   getMyIncidents: async () => {
     try {
       const token = await getToken();
@@ -199,6 +238,10 @@ const incidentsAPI = {
     }
   },
 
+  /**
+   * Get recent incidents (public endpoint)
+   * @returns {Promise<Array>} Array of recent incidents
+   */
   getRecentIncidents: async () => {
     try {
       const response = await fetch(`${API_URL}/incidents/recent`, {
@@ -236,6 +279,10 @@ const incidentsAPI = {
     }
   },
 
+  /**
+   * Get all incidents (admin only)
+   * @returns {Promise<Array>} Array of all incidents
+   */
   getAllIncidents: async () => {
     try {
       const token = await getToken();
@@ -265,6 +312,12 @@ const incidentsAPI = {
     }
   },
 
+  /**
+   * Update incident status
+   * @param {string} incidentId - ID of the incident to update
+   * @param {string} status - New status to set
+   * @returns {Promise<Object>} Updated incident data
+   */
   updateIncidentStatus: async (incidentId, status) => {
     try {
       const token = await getToken();
@@ -289,6 +342,11 @@ const incidentsAPI = {
     }
   },
 
+  /**
+   * Delete an incident
+   * @param {string} incidentId - ID of the incident to delete
+   * @returns {Promise<Object>} Deletion confirmation
+   */
   deleteIncident: async (incidentId) => {
     try {
       const token = await getToken();
@@ -313,7 +371,15 @@ const incidentsAPI = {
   },
 };
 
+/**
+ * Users API endpoints
+ * Handles user profile and leaderboard operations
+ */
 const usersAPI = {
+  /**
+   * Get the leaderboard data
+   * @returns {Promise<Array>} Array of users sorted by points
+   */
   getLeaderboard: async () => {
     try {
       const token = await getToken();
@@ -344,6 +410,10 @@ const usersAPI = {
     }
   },
 
+  /**
+   * Get current user's profile
+   * @returns {Promise<Object>} User profile data
+   */
   getUserProfile: async () => {
     try {
       const token = await getToken();
@@ -374,6 +444,12 @@ const usersAPI = {
     }
   },
 
+  /**
+   * Update user profile
+   * @param {Object} profileData - Updated profile data
+   * @param {string} profilePicture - URI of new profile picture
+   * @returns {Promise<Object>} Updated profile data
+   */
   updateProfile: async (profileData, profilePicture) => {
     try {
       const token = await getToken();
@@ -421,6 +497,11 @@ const usersAPI = {
     }
   },
 
+  /**
+   * Delete user account
+   * Removes user data and authentication tokens
+   * @returns {Promise<Object>} Deletion confirmation
+   */
   deleteAccount: async () => {
     try {
       const token = await getToken();
@@ -458,5 +539,5 @@ const usersAPI = {
   },
 };
 
-// Single export statement for all APIs
+// Export all API services
 export { authAPI, incidentsAPI, usersAPI }; 

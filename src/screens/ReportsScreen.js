@@ -19,14 +19,28 @@ import { useAuth } from '../AuthContext';
 import { SafeAreaView as RNSafeAreaViewContext } from 'react-native-safe-area-context';
 import BottomNav from '../components/BottomNav';
 
+/**
+ * ReportsScreen Component
+ * Displays a list of environmental incident reports submitted by the user
+ * Allows users to view report details and track their status
+ * Includes pull-to-refresh functionality and empty state handling
+ */
 const ReportsScreen = ({ navigation }) => {
+  // Authentication context
   const { isLoggedIn, signOut } = useAuth();
+  
+  // State management
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [isMenuVisible, setIsMenuVisible] = useState(false);
   const [isMenuClosing, setIsMenuClosing] = useState(false);
 
+  /**
+   * Fetches user's incident reports from the API
+   * Updates the reports state with fetched data
+   * Handles errors and loading states
+   */
   const fetchReports = async () => {
     try {
       setLoading(true);
@@ -55,15 +69,24 @@ const ReportsScreen = ({ navigation }) => {
     }
   };
 
+  // Fetch reports when component mounts
   useEffect(() => {
     fetchReports();
   }, []);
 
+  /**
+   * Handles pull-to-refresh functionality
+   * Triggers a new fetch of reports
+   */
   const onRefresh = () => {
     setRefreshing(true);
     fetchReports();
   };
 
+  /**
+   * Renders the empty state when no reports are available
+   * Shows a message and a button to create a new report
+   */
   const renderEmptyList = () => (
     <View style={styles.emptyContainer}>
       <Icon name="description" size={64} color="#b7c9a8" />
@@ -80,11 +103,17 @@ const ReportsScreen = ({ navigation }) => {
     </View>
   );
 
+  /**
+   * Renders a single report item in the list
+   * Shows report type, description, images, location, and status
+   * @param {Object} item - The report data to render
+   */
   const renderReportItem = ({ item }) => (
     <TouchableOpacity 
       style={styles.reportItem}
       onPress={() => navigation.navigate('ReportDetails', { report: item })}
     >
+      {/* Report header with type and date */}
       <View style={styles.reportHeader}>
         <View style={styles.titleContainer}>
           <View style={styles.typeContainer}>
@@ -110,10 +139,12 @@ const ReportsScreen = ({ navigation }) => {
         </Text>
       </View>
       
+      {/* Report description */}
       <Text style={styles.reportDescription} numberOfLines={2}>
         {item.description}
       </Text>
 
+      {/* Report images */}
       {item.images && item.images.length > 0 && (
         <View style={styles.imageContainer}>
           <Image
@@ -129,6 +160,7 @@ const ReportsScreen = ({ navigation }) => {
         </View>
       )}
 
+      {/* Report details (location and time) */}
       <View style={styles.detailsContainer}>
         <View style={styles.detailRow}>
           <View style={styles.detailItem}>
@@ -147,6 +179,7 @@ const ReportsScreen = ({ navigation }) => {
         </View>
       </View>
       
+      {/* Report status and severity */}
       <View style={styles.statusContainer}>
         <View style={styles.statusIndicator}>
           <Icon 
@@ -178,6 +211,11 @@ const ReportsScreen = ({ navigation }) => {
     </TouchableOpacity>
   );
 
+  /**
+   * Helper function to get color based on report status
+   * @param {string} status - The status of the report
+   * @returns {string} - Color code for the status
+   */
   const getStatusColor = (status) => {
     switch (status.toLowerCase()) {
       case 'new':
@@ -195,6 +233,11 @@ const ReportsScreen = ({ navigation }) => {
     }
   };
 
+  /**
+   * Helper function to get icon based on report status
+   * @param {string} status - The status of the report
+   * @returns {string} - Icon name for the status
+   */
   const getStatusIcon = (status) => {
     switch (status.toLowerCase()) {
       case 'new':
@@ -210,6 +253,11 @@ const ReportsScreen = ({ navigation }) => {
     }
   };
 
+  /**
+   * Helper function to get color based on report severity
+   * @param {string} severity - The severity of the report
+   * @returns {string} - Color code for the severity
+   */
   const getSeverityColor = (severity) => {
     switch (severity) {
       case 'low':
@@ -223,6 +271,9 @@ const ReportsScreen = ({ navigation }) => {
     }
   };
 
+  /**
+   * Menu handlers for the slide-out menu
+   */
   const handleMenuPress = () => {
     setIsMenuVisible(true);
     setIsMenuClosing(false);
